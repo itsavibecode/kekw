@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KEKWClips v0.23</title>
+<title>KEKWClips v0.24</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -22,8 +22,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:va
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:3px;height:3px}
 
+/* ── HOT WORDS + DONO ── */
+.hot-words{display:flex;flex-direction:column;gap:2px;align-self:start}
+.hot-word-tag{font-size:0.46rem;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:var(--purple-light);border-radius:3px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:86px}
+.dono-bubble{font-size:0.48rem;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.4);color:var(--gold);border-radius:3px;padding:1px 5px;cursor:default;margin-top:2px;white-space:nowrap}
+
 /* ── TOOLTIPS — rendered at body level to escape overflow:hidden ── */
 [data-tip]{cursor:default}
+.panel-cam-btn{background:none;border:none;cursor:pointer;font-size:.75rem;padding:0 3px;opacity:.5;transition:opacity .15s;line-height:1;vertical-align:middle}
+.panel-cam-btn:hover{opacity:1}
 #tooltip-el{
   position:fixed;z-index:9999;pointer-events:none;
   background:rgba(12,12,18,.97);color:var(--dim);font-size:0.62rem;line-height:1.55;
@@ -145,7 +152,7 @@ hr{border:none;border-top:1px solid var(--border)}
 .log-cnt{font-family:var(--disp);font-size:.9rem;color:var(--green)}
 
 /* grid: VOD | KEKWs | Viewers | ΔView | Uniq | Wall | Spammers | Frame | Clip */
-.rg{display:grid;grid-template-columns:80px 52px 66px 60px 46px 76px 1fr 130px;gap:5px;align-items:start;padding:5px 18px}
+.rg{display:grid;grid-template-columns:80px 52px 66px 60px 46px 76px 1fr 90px 130px;gap:5px;align-items:start;padding:5px 18px}
 .col-hds{background:var(--panel2);border-bottom:1px solid var(--border);position:sticky;top:32px;z-index:4}
 .col-h{font-size:0.48rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
 .hi-row{border-bottom:1px solid var(--border);transition:background .15s;animation:slin .22s ease}
@@ -326,7 +333,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <img src="data:image/jpeg;base64,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" alt="KEKW"/>
     <div class="hdr-brand-text">
       <div class="logo">KEKW<span>CLIPS</span></div>
-      <div class="logo-ver">v0.23</div>
+      <div class="logo-ver">v0.24</div>
     </div>
   </div>
   <div class="hdr-stats" style="flex:1;justify-content:flex-end">
@@ -423,7 +430,7 @@ hr{border:none;border-top:1px solid var(--border)}
 
     <!-- KEKW Leaderboard panel — collapsible -->
     <div class="cfg-section" id="cfg-lb">
-      <div class="cfg-hdr" onclick="toggleCfg('cfg-lb')">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-lb')" style="position:relative"><button onclick="event.stopPropagation();exportPanelLB(event)" class="panel-cam-btn" title="Export as PNG">📷</button>
         <span class="cfg-hdr-ttl">🏆 KEKW Leaderboard</span>
         <span class="cfg-arrow">▼</span>
       </div>
@@ -434,7 +441,7 @@ hr{border:none;border-top:1px solid var(--border)}
 
     <!-- Word Cloud panel — collapsible -->
     <div class="cfg-section" id="cfg-wc">
-      <div class="cfg-hdr" onclick="toggleCfg('cfg-wc')">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-wc')" style="position:relative"><button onclick="event.stopPropagation();exportPanelWC(event)" class="panel-cam-btn" title="Export as PNG">📷</button>
         <span class="cfg-hdr-ttl">☁️ Word Cloud</span>
         <span class="cfg-arrow">▼</span>
       </div>
@@ -458,7 +465,10 @@ hr{border:none;border-top:1px solid var(--border)}
   <div class="log-wrap">
     <div class="log-bar">
       <span class="log-ttl">Highlight Log</span>
-      <span class="log-cnt" id="log-cnt">0 MOMENTS</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button id="clip-filter-btn" onclick="toggleClipFilter()" title="Show only spikes with clips" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:2px 7px;font-size:0.58rem;cursor:pointer;transition:all .15s">📎 All</button>
+        <span class="log-cnt" id="log-cnt">0 MOMENTS</span>
+      </div>
     </div>
     <div class="rg col-hds">
       <span class="col-h">VOD TIME</span>
@@ -468,6 +478,7 @@ hr{border:none;border-top:1px solid var(--border)}
       <span class="col-h">UNIQ</span>
       <span class="col-h">WALL TIME</span>
       <span class="col-h">TOP SPAMMERS</span>
+      <span class="col-h">HOT WORDS</span>
       <span class="col-h">FRAME / CLIP</span>
     </div>
     <div id="log-body">
@@ -508,7 +519,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="rpanel-hdr" onclick="togglePanel('panel-ks')" style="background:rgba(127,29,29,.2)">
       <span class="rpanel-ttl" style="color:#fca5a5" data-tip="Monitors for any message sent by the\nKickSupport account. Triggers a sound alert.">🔴 KickSupport Watch</span>
       <span class="rpanel-badge" id="ks-cnt" style="color:var(--red)">0</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="event.stopPropagation();exportPanelKS(event)" class="panel-cam-btn" title="Export as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="ks-body"><div class="ks-empty">No KickSupport activity</div></div>
   </div>
@@ -517,7 +528,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="rpanel-hdr" onclick="togglePanel('panel-vs')">
       <span class="rpanel-ttl" data-tip="Tracks verified Kick partners who appear\nin chat during this monitoring session.">✅ Verified Watchers</span>
       <span class="rpanel-badge" id="vs-cnt">0</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="exportPanelVS(event)" class="panel-cam-btn" title="Export panel as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="vs-body"><div class="vs-empty">None spotted yet</div></div>
   </div>
@@ -526,7 +537,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="rpanel-hdr" onclick="togglePanel('panel-cx')" style="background:rgba(168,85,247,.08)">
       <span class="rpanel-ttl" style="color:var(--purple-light);display:flex;align-items:center;gap:5px"><img src="data:image/png;base64,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" style="width:16px;height:16px;border-radius:3px;vertical-align:middle"> CX DETECTOR</span>
       <span class="rpanel-badge" id="cx-cnt" style="color:var(--purple-light)">0</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="event.stopPropagation();exportPanelCX(event)" class="panel-cam-btn" title="Export as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="cx-body"><div class="ev-empty">No CX events detected</div></div>
   </div>
@@ -534,7 +545,7 @@ hr{border:none;border-top:1px solid var(--border)}
   <div class="rpanel" id="panel-pw" style="max-height:160px">
     <div class="rpanel-hdr" onclick="togglePanel('panel-pw')" style="background:rgba(251,191,36,.06)">
       <span class="rpanel-ttl" style="color:var(--gold)" data-tip="Parses KickBot messages to track tips and\ngifted subs. KPP estimates hourly payout.">💰 Pocket Watcher</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="exportPanelPW(event)" class="panel-cam-btn" title="Export panel as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body">
       <div class="pw-section"><div class="pw-section-ttl">Tips (USD)</div><div id="tips-lb"><div class="pw-empty">No tips yet</div></div></div>
@@ -550,7 +561,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="rpanel-hdr" onclick="togglePanel('panel-f')" style="background:rgba(239,68,68,.07)">
       <span class="rpanel-ttl" style="color:#60a5fa" data-tip="Detects chat spam waves of the letter F.\nGroups messages into events with start/end time.">🅵 F Detector</span>
       <span class="rpanel-badge" id="f-cnt" style="color:#f87171">0</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="event.stopPropagation();exportPanelF(event)" class="panel-cam-btn" title="Export as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="f-body"><div class="ev-empty">No F events detected</div></div>
   </div>
@@ -559,7 +570,7 @@ hr{border:none;border-top:1px solid var(--border)}
     <div class="rpanel-hdr" onclick="togglePanel('panel-muted')" style="background:rgba(96,165,250,.07)">
       <span class="rpanel-ttl" style="color:#f87171" data-tip="Detects when chat reacts to someone being muted.\nLooks for messages containing the word 'muted'.">🔇 Muted Detector</span>
       <span class="rpanel-badge" id="muted-cnt" style="color:#60a5fa">0</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="event.stopPropagation();exportPanelMuted(event)" class="panel-cam-btn" title="Export as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="muted-body"><div class="ev-empty">No muted events detected</div></div>
   </div>
@@ -567,7 +578,7 @@ hr{border:none;border-top:1px solid var(--border)}
   <div class="rpanel" id="panel-spam" style="max-height:150px">
     <div class="rpanel-hdr" onclick="togglePanel('panel-spam')">
       <span class="rpanel-ttl" data-tip="Flags users who send the same long message\n3+ times. Ignores emote-heavy messages.">🚨 Spammer Detector</span>
-      <span class="c-arrow">▼</span>
+      <button onclick="exportPanelSpam(event)" class="panel-cam-btn" title="Export panel as PNG">📷</button><span class="c-arrow">▼</span>
     </div>
     <div class="rpanel-body" id="spam-body"><div class="spam-empty">No repeat spammers detected</div></div>
   </div>
@@ -922,7 +933,12 @@ function recordSpike(msgCount){
   setEl('s-spikes',spikes);
   setEl('hdr-spikes',spikes);
   const nowD=new Date(),topSpammers=getTopSpammers(winMs),deltaViewers=viewerCount-prevViewerCount;
-  const h={id:Date.now(),spikeEpoch:Date.now(),vod:getVodTs(),count,viewers:viewerCount,deltaViewers,uniqChatters:currentUniqChatters,wallDate:nowD.toLocaleDateString([],{month:'short',day:'numeric'}),wallTime:nowD.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),rate:(count/nv('window')).toFixed(1),isRecord,topSpammers,frameUrl:null};
+  // Capture top 5 words from word cloud at spike moment
+  const spikeTopWords=Object.entries(wordFreq).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([w,f])=>w);
+  // Check for recent tips (within 60s before spike)
+  const spNow=Date.now();
+  const recentTips=Object.entries(tipsMap).filter(([u,v])=>v>0).map(([u,v])=>({user:u,amount:v}));
+  const h={id:Date.now(),spikeEpoch:Date.now(),vod:getVodTs(),count,viewers:viewerCount,deltaViewers,uniqChatters:currentUniqChatters,wallDate:nowD.toLocaleDateString([],{month:'short',day:'numeric'}),wallTime:nowD.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),rate:(count/nv('window')).toFixed(1),isRecord,topSpammers,topWords:spikeTopWords,recentTips,hasClip:false,frameUrl:null};
   highlights.unshift(h);prevViewerCount=viewerCount;
   document.getElementById('log-cnt').textContent=highlights.length+' MOMENTS';
   document.querySelector('#log-body .empty')?.remove();
@@ -965,6 +981,23 @@ function addRow(h){
     });
   }else{const d=document.createElement('span');d.style.cssText='font-size:.5rem;color:var(--muted)';d.textContent='—';tagsEl.appendChild(d)}
   row.appendChild(tagsEl);
+  // Hot words cell — top 5 chat words at spike time
+  const wordsEl=document.createElement('div');wordsEl.className='hot-words';
+  if(h.topWords&&h.topWords.length){
+    h.topWords.forEach(w=>{
+      const tag=document.createElement('span');tag.className='hot-word-tag';tag.textContent=w;
+      wordsEl.appendChild(tag);
+    });
+  }else{const d=document.createElement('span');d.style.cssText='font-size:.5rem;color:var(--muted)';d.textContent='—';wordsEl.appendChild(d)}
+  // Dono bubble — if tips happened around spike time
+  if(h.recentTips&&h.recentTips.length){
+    const dono=document.createElement('div');dono.className='dono-bubble';
+    const tipSummary=h.recentTips.map(t=>`${esc(t.user)}: $${t.amount.toFixed(2)}`).join('\n');
+    dono.setAttribute('data-tip','💰 Tip during spike:\n'+tipSummary);
+    dono.textContent='💰 dono';
+    wordsEl.appendChild(dono);
+  }
+  row.appendChild(wordsEl);
   // Combined frame+clip cell
   const frameClipCell=document.createElement('div');frameClipCell.className='frame-clip-cell';frameClipCell.id='fcc'+h.id;
   const tw=document.createElement('div');tw.className='thumb-wrap';tw.id='tw'+h.id;tw.innerHTML='<div class="no-thumb">Capturing…</div>';
@@ -985,16 +1018,25 @@ function scheduleFrameCapture(h){
 }
 function updateRowFrame(id,dataUrl){const wrap=document.getElementById('tw'+id);if(!wrap)return;wrap.innerHTML='';const img=document.createElement('img');img.src=dataUrl;const ol=document.createElement('div');ol.className='thumb-ol';ol.textContent='🔍';wrap.appendChild(img);wrap.appendChild(ol);wrap.onclick=()=>openLightbox(dataUrl)}
 
-// ── PROXY IMAGE FETCH — returns a data URL via allorigins proxy ────────────
+// ── PROXY IMAGE FETCH — tries multiple strategies ─────────────────────────
 async function fetchProxyImage(imgUrl){
-  const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(imgUrl)}`;
-  try{
-    const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-    if(!res.ok)return null;
-    const blob=await res.blob();
-    if(blob.size<500)return null;
-    return await new Promise((ok,fail)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=fail;r.readAsDataURL(blob)});
-  }catch{return null}
+  if(!imgUrl)return null;
+  const proxies=[
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(imgUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(imgUrl)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${imgUrl}`,
+  ];
+  for(const proxy of proxies){
+    try{
+      const res=await fetch(proxy,{signal:AbortSignal.timeout(7000)});
+      if(!res.ok)continue;
+      const blob=await res.blob();
+      if(blob.size<500)continue;
+      if(!blob.type.startsWith('image/')&&blob.type!=='application/octet-stream')continue;
+      return await new Promise((ok,fail)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=fail;r.readAsDataURL(blob)});
+    }catch{continue}
+  }
+  return null;
 }
 
 // ── CLIP COUNTDOWN + MULTI-ATTEMPT SEARCH ─────────────────────────────────
@@ -1019,9 +1061,15 @@ function startClipCountdown(id, spikeObj){
 
   function updateDisplay(){
     if(found)return;
-    if(!document.getElementById('ci'+id))return; // row removed
-    const nextSearch=CLIP_SEARCH_ATTEMPTS[attemptIdx]||60;
-    ci.innerHTML=`<span class="clip-searching">🔍 ${remaining}s…</span>`;
+    const el=document.getElementById('ci'+id);
+    if(!el)return;
+    if(remaining>0){
+      el.innerHTML=`<span class="clip-searching">🔍 ${remaining}s</span>`;
+    } else {
+      const attempt=attemptIdx+1;
+      const total=CLIP_SEARCH_ATTEMPTS.length;
+      el.innerHTML=`<span class="clip-searching">🔍 searching… (${attempt}/${total})</span>`;
+    }
   }
 
   function tick(){
@@ -1031,6 +1079,7 @@ function startClipCountdown(id, spikeObj){
     if(remaining>0){
       countdownTimer=setTimeout(tick,1000);
     }
+    // At 0: leave display as-is — findClipsAttempt will update it
   }
 
   function doSearch(){
@@ -1079,8 +1128,7 @@ async function findClipsAttempt(id,h,onFound,onMiss){
     if(ci0)ci0.innerHTML='<span class="clip-none">No channel</span>';
     return;
   }
-  const ci0=document.getElementById('ci'+id);
-  if(ci0)ci0.innerHTML='<span class="clip-searching">🔍 searching…</span>';
+  // Don't overwrite the countdown timer display
   try{
     // Kick's public clip endpoint — fetch recent clips for the channel
     const target=encodeURIComponent(`https://kick.com/api/v2/channels/${currentSlug}/clips?sort=date&time=day`);
@@ -1145,18 +1193,41 @@ async function findClipsAttempt(id,h,onFound,onMiss){
         +(clipperName?`<div class="clip-by">✂ ${esc(clipperName)}</div>`:'');
     }
     showToast('📎 Found clip: '+title);
+    // Mark spike as having a clip for filter
+    const spikeObj=highlights.find(x=>x.id===id);
+    if(spikeObj)spikeObj.hasClip=true;
     if(onFound)onFound();
     // ── Use clip thumbnail to replace the stream frame capture ──────────────
     // The clip object has a thumbnail field (string URL or object with src/url)
-    const rawThumb=best.thumbnail||best.clip_thumbnail||null;
+    // Extract thumbnail URL — Kick clips have thumbnail at various paths
+    const rawThumb=best.thumbnail||best.clip_thumbnail||best.preview||null;
     let clipThumbUrl=null;
     if(typeof rawThumb==='string'&&rawThumb.startsWith('http'))clipThumbUrl=rawThumb;
     else if(rawThumb?.src)clipThumbUrl=rawThumb.src;
     else if(rawThumb?.url)clipThumbUrl=rawThumb.url;
+    else if(rawThumb?.thumb)clipThumbUrl=rawThumb.thumb;
+    // Also try to derive thumbnail URL from the clip URL pattern
+    // Kick thumbnail pattern: https://clips.kick.com/clips/{id}/thumbnail.jpg
+    if(!clipThumbUrl&&clipId){
+      clipThumbUrl=`https://clips.kick.com/clips/${clipId}/thumbnail.jpg`;
+    }
     if(clipThumbUrl){
-      // Fetch via proxy and replace the row frame — clip thumb is better than stream thumb
       fetchProxyImage(clipThumbUrl).then(dataUrl=>{
         if(dataUrl){h.frameUrl=dataUrl;updateRowFrame(id,dataUrl)}
+        else{
+          // If proxy fetch fails, set image src directly (may work for some CDNs)
+          const wrap=document.getElementById('tw'+id);
+          if(wrap&&clipThumbUrl){
+            wrap.innerHTML='';
+            const img=document.createElement('img');
+            img.src=clipThumbUrl;
+            img.onerror=()=>{wrap.innerHTML='<div class="no-thumb">No thumbnail</div>'};
+            img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
+            const ol=document.createElement('div');ol.className='thumb-ol';ol.textContent='🔍';
+            wrap.appendChild(img);wrap.appendChild(ol);
+            wrap.onclick=()=>openLightbox(clipThumbUrl);
+          }
+        }
       }).catch(()=>{});
     }
     // Also store all nearby clips (within 3 min)
@@ -1209,7 +1280,14 @@ function tryWS(roomId,btn){
   ws.onopen=()=>ws.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${roomId}.v2`}}));
   ws.onmessage=raw=>{
     let m;try{m=JSON.parse(raw.data)}catch{return}
-    if(m.event==='pusher:connection_established'){clearTimeout(to);connected=true;setStatus('live','LIVE');btn.textContent='DISCONNECT';btn.disabled=false;showToast('✅ Connected to '+document.getElementById('slug').value);pingTimer=setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({event:'pusher:ping',data:{}}))},30000);return}
+    if(m.event==='pusher:connection_established'){
+      clearTimeout(to);connected=true;setStatus('live','LIVE');
+      btn.textContent='DISCONNECT';btn.disabled=false;
+      showToast('✅ Connected to '+document.getElementById('slug').value);
+      dismissDisc(); // auto-dismiss disconnect overlay if showing
+      pingTimer=setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({event:'pusher:ping',data:{}}))},30000);
+      return;
+    }
     if(m.event==='App\\Events\\ChatMessageEvent'||m.event==='App\\Events\\ChatMessageSentEvent'){
       try{
           const d=typeof m.data==='string'?JSON.parse(m.data):m.data;
@@ -1655,7 +1733,7 @@ function captureStats(){
   c.font='bold 36px "Bebas Neue",monospace';c.fillStyle='#53fc18';c.textAlign='center';
   c.fillText('KEKWCLIPS',W/2,60);
   c.font='14px monospace';c.fillStyle='#8888a0';
-  c.fillText('v0.23 — Kick Highlight Monitor',W/2,82);
+  c.fillText('v0.24 — Kick Highlight Monitor',W/2,82);
   // Streamer
   const slug=(document.getElementById('hdr-streamer')?.textContent||'—').toUpperCase();
   c.font='bold 28px "Bebas Neue",monospace';c.fillStyle='#f0f0f0';
@@ -1800,12 +1878,82 @@ function captureStats(){
   c.fillText('Captured: '+shortDate(captureNow)+' '+tzShort,W/2,H-52);
   c.fillText('Start: '+shortDate(startD)+'  →  End: '+shortDate(endD)+' '+tzShort,W/2,H-38);
   c.font='8px monospace';c.fillStyle='#444455';
-  c.fillText('KEKWClips v0.23  ·  kick.com/'+slug.toLowerCase(),W/2,H-20);
+  c.fillText('KEKWClips v0.24  ·  kick.com/'+slug.toLowerCase(),W/2,H-20);
   // Download
   const a=document.createElement('a');
   a.download='kekwclips_'+(document.getElementById('slug')?.value||'stats')+'_'+Date.now()+'.png';
   a.href=canvas.toDataURL('image/png');a.click();
   showToast('📷 Stats saved as PNG');
+}
+
+// ── PANEL SCREENSHOT — 3:2 PNG of a specific panel ────────────────────────
+function exportPanel(panelBodyEl, titleText){
+  if(!panelBodyEl){showToast('Panel not found');return}
+  const W=420,H=280; // 3:2
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');
+  c.fillStyle='#0a0a0b';c.fillRect(0,0,W,H);
+  c.strokeStyle='#2a2a34';c.strokeRect(1,1,W-2,H-2);
+  // Title
+  c.font='bold 18px "Bebas Neue",monospace';c.fillStyle='#53fc18';c.textAlign='center';
+  c.fillText('KEKWCLIPS',W/2,22);
+  c.font='bold 13px "Bebas Neue",monospace';c.fillStyle='#f0f0f0';
+  c.fillText(titleText.toUpperCase(),W/2,38);
+  c.strokeStyle='#2a2a34';c.beginPath();c.moveTo(20,44);c.lineTo(W-20,44);c.stroke();
+  // Content — walk the DOM and draw text
+  let y=58;
+  const rows=panelBodyEl.querySelectorAll('[class*="row"],[class*="pw-row"],[class*="ldrbrd-row"],[class*="vs-row"],[class*="ks-row"],[class*="spam-row"],[class*="ev-event"],[class*="wc-word"]');
+  if(rows.length===0){
+    // Fallback: just draw the text content
+    const txt=panelBodyEl.textContent.trim().slice(0,400);
+    c.font='10px monospace';c.fillStyle='#d0d0e0';c.textAlign='left';
+    const words=txt.split(/\s+/);let line='';
+    words.forEach(w=>{
+      const test=line?line+' '+w:w;
+      if(c.measureText(test).width>W-40){c.fillText(line,20,y);y+=14;line=w;}else{line=test}
+    });
+    if(line)c.fillText(line,20,y);
+  } else {
+    rows.forEach(row=>{
+      if(y>H-30)return;
+      const txt=row.textContent.trim().replace(/\s+/g,' ').slice(0,60);
+      c.font='10px monospace';c.fillStyle='#d0d0e0';c.textAlign='left';
+      c.fillText(txt,20,y);y+=16;
+    });
+  }
+  // Footer
+  c.font='8px monospace';c.fillStyle='#444';c.textAlign='center';
+  c.fillText('KEKWClips v0.24  ·  '+new Date().toLocaleString(),W/2,H-8);
+  const a=document.createElement('a');
+  a.download='kekwclips_panel_'+titleText.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'_'+Date.now()+'.png';
+  a.href=canvas.toDataURL('image/png');a.click();
+  showToast('📷 '+titleText+' exported');
+}
+function exportPanelVS(e){e.stopPropagation();exportPanel(document.getElementById('vs-body'),'Verified Watchers')}
+function exportPanelKS(e){e.stopPropagation();exportPanel(document.getElementById('ks-body'),'KickSupport Watch')}
+function exportPanelCX(e){e.stopPropagation();exportPanel(document.getElementById('cx-body'),'CX Detector')}
+function exportPanelF(e){e.stopPropagation();exportPanel(document.getElementById('f-body'),'F Detector')}
+function exportPanelMuted(e){e.stopPropagation();exportPanel(document.getElementById('muted-body'),'Muted Detector')}
+function exportPanelSpam(e){e.stopPropagation();exportPanel(document.getElementById('spam-body'),'Spammer Detector')}
+function exportPanelLB(e){if(e)e.stopPropagation();exportPanel(document.getElementById('overall-lb'),'KEKW Leaderboard')}
+function exportPanelWC(e){if(e)e.stopPropagation();exportPanel(document.getElementById('word-cloud-sb'),'Word Cloud')}
+function exportPanelPW(e){e.stopPropagation();
+  const el=document.querySelector('#panel-pw .rpanel-body');
+  exportPanel(el,'Pocket Watcher');
+}
+
+// ── CLIP FILTER ───────────────────────────────────────────────────────────
+let clipFilterActive=false;
+function toggleClipFilter(){
+  clipFilterActive=!clipFilterActive;
+  const btn=document.getElementById('clip-filter-btn');
+  if(btn){btn.textContent=clipFilterActive?'📎 Clips only':'📎 All';btn.style.color=clipFilterActive?'var(--green)':'var(--muted)';btn.style.borderColor=clipFilterActive?'var(--green)':'var(--border)';}
+  document.querySelectorAll('.hi-row').forEach(row=>{
+    const id=parseInt(row.id.replace('r',''));
+    const spike=highlights.find(x=>x.id===id);
+    row.style.display=(clipFilterActive&&spike&&!spike.hasClip)?'none':'';
+  });
 }
 
 // ── SESSIONS ─────────────────────────────────────────────────────────────
