@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KEKWClips v0.23</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0b;--panel:#16161a;--panel2:#1c1c22;--border:#2a2a34;
+  --green:#53fc18;--orange:#ff4d00;--purple:#a855f7;--purple-dark:#7c3aed;--purple-light:#c084fc;
+  --gold:#fbbf24;--red-dark:#7f1d1d;--red:#ef4444;
+  --text:#f0f0f0;--dim:#d0d0e0;--muted:#8888a0;
+  --disp:'Bebas Neue',sans-serif;--mono:'JetBrains Mono',monospace;
+  /* Larger base font sizes */
+  --fs:1.02rem;--fs-sm:0.88rem;--fs-xs:0.72rem;--fs-lbl:0.70rem;--fs-chat:0.72rem;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:var(--fs);display:flex;flex-direction:column}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;height:3px}
+
+/* ── TOOLTIPS — rendered at body level to escape overflow:hidden ── */
+[data-tip]{cursor:default}
+#tooltip-el{
+  position:fixed;z-index:9999;pointer-events:none;
+  background:rgba(12,12,18,.97);color:var(--dim);font-size:0.62rem;line-height:1.55;
+  padding:7px 11px;border-radius:5px;border:1px solid var(--border);
+  white-space:pre-wrap;max-width:240px;width:max-content;
+  box-shadow:0 4px 20px rgba(0,0,0,.6);font-family:var(--mono);
+  opacity:0;transition:opacity .12s;
+}
+#tooltip-el.visible{opacity:1}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;height:62px;overflow:hidden}
+.hdr-brand{display:flex;align-items:center;gap:8px;padding:0 16px;border-right:1px solid var(--border);height:100%;flex-shrink:0}
+.hdr-brand img{width:32px;height:32px;border-radius:4px;object-fit:cover}
+.hdr-brand-text{display:flex;flex-direction:column}
+.logo{font-family:var(--disp);font-size:2rem;letter-spacing:2px;color:var(--green);line-height:1;white-space:nowrap}
+.logo span{color:var(--text)}
+.logo-ver{font-size:var(--fs-xs);color:var(--muted);letter-spacing:2px}
+.hdr-stats{display:flex;gap:0;align-items:stretch;justify-content:flex-end;flex:1;overflow:hidden}
+.hdr-chip{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:0 14px;border-right:1px solid var(--border);min-width:85px;flex-shrink:0}
+.hdr-chip-wide{min-width:120px;max-width:200px}
+.hdr-chip-l{font-size:0.5rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);white-space:nowrap;text-align:center;display:block}
+.hdr-chip-v{font-family:var(--disp);font-size:1.1rem;line-height:1;white-space:nowrap;color:var(--dim)}
+.hdr-chip-v.g{color:var(--green)}.hdr-chip-v.p{color:var(--purple)}
+.hdr-right{display:flex;align-items:center;gap:14px;padding:0 16px;border-left:1px solid var(--border);flex-shrink:0}
+.hdr-stream-info{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:20px;padding:0 4px;min-width:220px}
+.hdr-mon-left{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.hdr-monitoring{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
+.hdr-monitoring .pulse{color:var(--purple);animation:blink 1.5s infinite}
+.hdr-streamer{font-family:var(--disp);font-size:1.2rem;color:var(--text);line-height:1;white-space:nowrap}
+.hdr-mon-dur{font-size:var(--fs-sm);color:var(--purple-light);white-space:nowrap;font-family:var(--disp);line-height:1}
+.status-block{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-size:1.2rem;letter-spacing:2px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.dot.live{background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
+.dot.error{background:var(--red);box-shadow:0 0 8px var(--red)}
+#status-text{color:var(--green)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:260px 1fr 230px 240px;flex:1;min-height:0}
+
+/* ── SIDEBAR ── */
+.sidebar{border-right:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;overflow:hidden}
+.sb-scroll{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* Collapsible config sections in sidebar */
+.cfg-section{border:1px solid var(--border);border-radius:5px;overflow:hidden;flex-shrink:0}
+.cfg-hdr{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--panel2);cursor:pointer;user-select:none}
+.cfg-hdr:hover{background:#22222e}
+.cfg-hdr-ttl{font-size:var(--fs-lbl);text-transform:uppercase;letter-spacing:3px;color:var(--muted)}
+.cfg-arrow{font-size:.6rem;color:var(--muted);transition:transform .2s}
+.cfg-section.collapsed .cfg-arrow{transform:rotate(-90deg)}
+.cfg-body{padding:10px;display:flex;flex-direction:column;gap:8px}
+.cfg-section.collapsed .cfg-body{display:none}
+
+.lbl{font-size:var(--fs-lbl);text-transform:uppercase;letter-spacing:3px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:4px}
+input[type=text],input[type=number]{
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:var(--fs-sm);padding:7px 9px;border-radius:4px;
+  outline:none;width:100%;transition:border-color .2s
+}
+input::placeholder{color:var(--muted)}
+input:focus{border-color:var(--green)}
+#token:not(:focus){-webkit-text-security:disc;text-security:disc}
+.hint{font-size:0.58rem;color:var(--muted);line-height:1.55}
+.hint code{color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+hr{border:none;border-top:1px solid var(--border)}
+.ch-row{display:flex;gap:5px;align-items:center}
+.ch-row input{flex:1;min-width:0}
+.icon-btn{background:none;border:none;font-size:1rem;cursor:pointer;color:var(--muted);padding:3px 5px;line-height:1;transition:color .15s,transform .15s;flex-shrink:0}
+.icon-btn:hover{transform:scale(1.2)}
+.icon-btn.on{color:var(--green)}
+
+/* Fav bubbles */
+.fav-bubbles{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.fav-bubble{display:inline-flex;align-items:center;gap:4px;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:3px 8px 3px 10px;cursor:pointer;transition:border-color .15s;font-size:var(--fs-sm)}
+.fav-bubble:hover{border-color:var(--green)}
+.fav-bubble-del{background:none;border:none;cursor:pointer;color:var(--gold);font-size:.75rem;padding:0;line-height:1;margin-left:2px}
+.fav-bubble-del:hover{color:var(--orange)}
+
+.btn{font-family:var(--disp);font-size:1rem;letter-spacing:2px;padding:9px 16px;border-radius:4px;border:none;cursor:pointer;transition:all .15s;width:100%}
+.btn-g{background:var(--green);color:#000;font-weight:700}
+.btn-g:hover{filter:brightness(1.1)}
+.btn-g:disabled{background:var(--border);color:var(--muted);cursor:not-allowed}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--dim);font-size:.75rem;padding:7px;letter-spacing:1px}
+.btn-o:hover{border-color:var(--dim)}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:8px 10px}
+.stat-v{font-family:var(--disp);font-size:1.7rem;line-height:1;color:var(--green)}
+.stat-l{font-size:0.5rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-top:2px;line-height:1.3}
+
+/* Leaderboard */
+.ldrbrd{display:flex;flex-direction:column;gap:4px}
+.ldrbrd-row{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--panel2);border:1px solid var(--border);border-radius:4px}
+.ldrbrd-rank{font-family:var(--disp);font-size:.9rem;color:var(--muted);width:16px;flex-shrink:0;line-height:1}
+.ldrbrd-rank.gold{color:var(--gold)}.ldrbrd-rank.silver{color:#94a3b8}.ldrbrd-rank.bronze{color:#b45309}
+.ldrbrd-name{font-size:var(--fs-sm);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldrbrd-cnt{font-family:var(--disp);font-size:.85rem;color:var(--purple)}
+.ldrbrd-empty{font-size:var(--fs-sm);color:var(--muted);text-align:center;padding:5px 0;font-style:italic}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.chart-wrap{padding:10px 18px 0;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
+.chart-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.chart-ttl{font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:3px;color:var(--dim)}
+.chart-rate{font-family:var(--disp);font-size:1.1rem;color:var(--purple)}
+#chart{width:100%;height:56px;display:block;margin-bottom:0}
+
+/* Log */
+.log-wrap{flex:1;overflow-y:auto;min-height:0}
+.log-bar{display:flex;justify-content:space-between;align-items:center;padding:7px 18px;border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:5}
+.log-ttl{font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:3px;color:var(--dim)}
+.log-cnt{font-family:var(--disp);font-size:.9rem;color:var(--green)}
+
+/* grid: VOD | KEKWs | Viewers | ΔView | Uniq | Wall | Spammers | Frame | Clip */
+.rg{display:grid;grid-template-columns:80px 52px 66px 60px 46px 76px 1fr 130px;gap:5px;align-items:start;padding:5px 18px}
+.col-hds{background:var(--panel2);border-bottom:1px solid var(--border);position:sticky;top:32px;z-index:4}
+.col-h{font-size:0.48rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.hi-row{border-bottom:1px solid var(--border);transition:background .15s;animation:slin .22s ease}
+.hi-row:hover{background:var(--panel2)}
+.hi-row.fresh{border-left:3px solid var(--orange)}
+.hi-row.record-row{border-left:3px solid var(--purple)}
+@keyframes slin{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+.vts{font-family:var(--disp);font-size:.88rem;align-self:center}
+.vc{font-size:var(--fs-sm);color:var(--green);align-self:center}
+.wt{font-size:var(--fs-sm);color:var(--dim);line-height:1.4;align-self:center}
+.vd{font-size:var(--fs-sm);align-self:center;color:var(--dim)}
+.vd.big-gain{background:var(--red-dark);color:#fff;border-radius:3px;padding:2px 4px;font-size:0.5rem;font-weight:600;white-space:nowrap;display:inline-block}
+.uc-cell{font-size:var(--fs-sm);color:var(--purple-light);align-self:center}
+
+/* Purple KEKW count — color scales with value */
+.kc{font-family:var(--disp);font-size:1rem;align-self:center;/* color set inline by JS */}
+
+/* Spammer tag bubbles */
+.spam-tags{display:flex;flex-wrap:wrap;gap:2px;align-self:center}
+.spam-tag{display:inline-flex;align-items:center;gap:2px;border-radius:3px;padding:1px 5px;font-size:0.46rem;line-height:1.5;white-space:nowrap;font-family:var(--mono)}
+.spam-tag .st-name{color:#fff;font-size:0.46rem}
+.spam-tag .st-cnt{font-size:0.42rem}
+
+/* Thumbnail */
+.frame-clip-cell{display:flex;flex-direction:column;gap:3px;align-self:start}
+.clip-info{font-size:0.54rem;line-height:1.4;max-width:126px}
+.clip-title-link{color:var(--green);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.56rem}
+.clip-title-link:hover{text-decoration:underline}
+.clip-by{color:var(--muted);font-size:0.48rem;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clip-searching{color:var(--muted);font-size:0.5rem;font-style:italic}
+.clip-none{color:var(--muted);font-size:0.5rem}
+.thumb-wrap{position:relative;width:126px;height:70px;border-radius:3px;overflow:hidden;background:var(--panel2);border:1px solid var(--border);flex-shrink:0;cursor:pointer;align-self:start}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.no-thumb{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:0.44rem;color:var(--muted);text-align:center;padding:4px;line-height:1.3}
+.thumb-ol{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:.55rem;color:#fff}
+.thumb-wrap:hover .thumb-ol{opacity:1}
+
+/* clip-btn removed — merged into frame-clip-cell */
+
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:130px;gap:8px;color:var(--muted);font-size:var(--fs-sm);text-transform:uppercase;letter-spacing:2px}
+.empty-ico{font-size:1.8rem;opacity:.25}
+
+/* ── RIGHT COL ── */
+.chat-col{border-left:1px solid var(--border);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.right-col{border-left:1px solid var(--border);display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.rpanel{display:flex;flex-direction:column;flex-shrink:0;border-bottom:1px solid var(--border)}
+.rpanel.grow{flex:1;min-height:0;overflow:hidden}
+.rpanel-hdr{display:flex;justify-content:space-between;align-items:center;padding:6px 11px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;cursor:pointer;user-select:none}
+.rpanel-hdr:hover{background:var(--panel2)}
+.rpanel-ttl{font-size:var(--fs-xs);text-transform:uppercase;letter-spacing:3px;color:var(--dim)}
+.rpanel-badge{font-family:var(--disp);font-size:.85rem;color:var(--green)}
+#f-cnt{color:#f87171!important}
+#muted-cnt{color:#60a5fa!important}
+#cx-cnt{color:var(--purple-light)!important}
+#ks-cnt{color:var(--red)!important}
+.rpanel-body{overflow-y:auto;flex:1;min-height:0}
+.rpanel.collapsed .rpanel-body{display:none}
+.rpanel.collapsed{flex-shrink:0}
+.c-arrow{font-size:.6rem;color:var(--muted);transition:transform .2s;display:inline-block}
+.rpanel.collapsed .c-arrow{transform:rotate(-90deg)}
+
+/* Chat */
+.msg{padding:3px 10px;font-size:var(--fs-chat);line-height:1.38;border-bottom:1px solid rgba(255,255,255,.022);word-break:break-word}
+.msg:hover{background:var(--panel2)}
+.msg.kekw{background:rgba(168,85,247,.07);border-left:2px solid var(--purple);padding-left:8px}
+.msg-user{font-weight:600;font-size:var(--fs-xs)}
+.msg-text{color:var(--dim);margin-top:1px}
+.kw{color:var(--purple);font-weight:700}
+.chat-meta{display:flex;justify-content:space-between;padding:4px 10px;border-bottom:1px solid var(--border);font-size:var(--fs-xs);flex-shrink:0;background:var(--panel)}
+.chat-meta-item{display:flex;flex-direction:column}
+.chat-meta-l{color:var(--muted);font-size:0.46rem;text-transform:uppercase;letter-spacing:2px}
+.chat-meta-v{font-family:var(--disp);font-size:.85rem;color:var(--dim)}
+.chat-container{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.chat-feed{flex:1;overflow-y:auto;min-height:0}
+.scroll-bottom-btn{position:absolute;bottom:8px;right:10px;background:var(--purple);color:#fff;border:none;border-radius:12px;padding:3px 9px;font-size:.6rem;cursor:pointer;z-index:10;opacity:.85}
+.scroll-bottom-btn:hover{opacity:1}
+
+/* Spam detector */
+.spam-row{display:flex;align-items:flex-start;gap:6px;padding:4px 10px;border-bottom:1px solid rgba(255,255,255,.025);font-size:var(--fs-sm)}
+.spam-user{color:var(--orange);font-weight:600;white-space:nowrap;min-width:65px;font-size:var(--fs-xs)}
+.spam-msg{color:var(--muted);font-size:0.52rem;line-height:1.4;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.spam-cnt{font-family:var(--disp);font-size:.8rem;color:var(--red);flex-shrink:0}
+
+/* Verified streamers */
+.vs-row{display:flex;align-items:center;gap:6px;padding:4px 10px;border-bottom:1px solid rgba(255,255,255,.025);font-size:var(--fs-sm)}
+.vs-badge{font-size:.6rem;background:rgba(83,252,24,.15);color:var(--green);border-radius:3px;padding:1px 5px;flex-shrink:0}
+.vs-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vs-cnt{font-family:var(--disp);font-size:.8rem;color:var(--muted)}
+.vs-empty,.ks-empty,.spam-empty,.ev-empty{font-size:var(--fs-sm);color:var(--muted);text-align:center;padding:8px;font-style:italic}
+#vs-body{max-height:280px;overflow-y:auto}
+
+/* KickSupport */
+.ks-row{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.025)}
+.ks-meta{display:flex;gap:8px;font-size:0.52rem;color:var(--muted);margin-bottom:2px}
+.ks-msg{color:var(--dim);font-size:0.56rem;line-height:1.4}
+
+/* F detector + Muted detector */
+.ev-section{display:flex;flex-direction:column;gap:0}
+.ev-event{padding:5px 10px;border-bottom:1px solid rgba(255,255,255,.025);font-size:var(--fs-sm)}
+.ev-event-hdr{display:flex;justify-content:space-between;align-items:center}
+.ev-event-label{font-weight:600;font-size:var(--fs-xs)}
+.ev-event-label.f-label{color:#f87171}
+.ev-event-label.mut-label{color:#60a5fa}
+.ev-event-cnt{font-family:var(--disp);font-size:.9rem;color:var(--dim)}
+.ev-event-times{font-size:0.5rem;color:var(--muted);margin-top:2px}
+.ev-active{animation:blink 1s infinite}
+
+/* Pocket Watchin */
+.pw-section{padding:6px 10px;border-bottom:1px solid var(--border)}
+.pw-section-ttl{font-size:0.5rem;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:4px}
+.pw-row{display:flex;align-items:center;gap:5px;padding:3px 0}
+.pw-rank{font-family:var(--disp);font-size:.8rem;color:var(--muted);width:14px;flex-shrink:0}
+.pw-rank.gold{color:var(--gold)}.pw-rank.silver{color:#94a3b8}.pw-rank.bronze{color:#b45309}
+.pw-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm)}
+.pw-val{font-family:var(--disp);font-size:.85rem;color:var(--green);flex-shrink:0}
+.pw-empty{font-size:var(--fs-sm);color:var(--muted);font-style:italic;text-align:center;padding:5px}
+
+/* Word cloud */
+#word-cloud,#word-cloud-sb{padding:6px;display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start}
+.wc-word{border-radius:3px;padding:1px 4px;background:var(--panel2);border:1px solid var(--border);cursor:default;white-space:nowrap;font-size:0.58rem}
+
+/* TOAST */
+.toast{position:fixed;top:14px;right:14px;color:#000;font-family:var(--disp);font-size:.9rem;letter-spacing:2px;padding:9px 14px;border-radius:4px;z-index:999;transform:translateX(250%);transition:transform .28s ease;max-width:320px;background:var(--green)}
+.toast.show{transform:none}
+.toast.record{background:var(--purple-light);color:#1a0a2e}
+.toast.ks-alert{background:var(--red-dark);color:#fff}
+
+/* SESSION HISTORY */
+.sess-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:700;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.sess-overlay.open{opacity:1;pointer-events:all}
+.sess-modal{background:var(--panel);border:1px solid var(--border);border-radius:8px;width:min(95vw,900px);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.sess-hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sess-title{font-family:var(--disp);font-size:1.4rem;letter-spacing:2px;color:var(--green)}
+.sess-body{overflow-y:auto;flex:1;padding:12px}
+.sess-streamer-hdr{font-family:var(--disp);font-size:1.1rem;color:var(--purple);letter-spacing:2px;padding:8px 0 4px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sess-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:16px}
+.sess-card{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:12px;cursor:pointer;transition:border-color .15s}
+.sess-card:hover{border-color:var(--purple)}
+.sess-card.expanded{border-color:var(--green)}
+.sess-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sess-card-slug{font-family:var(--disp);font-size:1rem;color:var(--green)}
+.sess-card-date{font-size:0.6rem;color:var(--muted)}
+.sess-card-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px}
+.sess-stat{background:var(--panel);border-radius:4px;padding:4px 6px;text-align:center}
+.sess-stat-v{font-family:var(--disp);font-size:0.95rem;color:var(--text)}
+.sess-stat-l{font-size:0.46rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.sess-spikes-list{margin-top:8px;max-height:180px;overflow-y:auto;display:none}
+.sess-card.expanded .sess-spikes-list{display:block}
+.sess-spike-row{display:flex;gap:8px;padding:3px 0;font-size:0.65rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.sess-spike-vod{color:var(--muted);flex-shrink:0;width:56px}
+.sess-spike-cnt{color:var(--orange);font-family:var(--disp);font-size:0.8rem;flex-shrink:0;width:36px}
+.sess-spike-v{color:var(--green);flex-shrink:0;width:60px}
+.sess-spike-w{color:var(--dim);flex:1}
+.sess-spike-rec{color:var(--purple);font-size:0.6rem}
+.sess-compare-bar{height:8px;background:var(--panel);border-radius:4px;overflow:hidden;margin-top:4px}
+.sess-compare-fill{height:100%;border-radius:4px;background:var(--purple);transition:width .4s}
+.sess-empty{color:var(--muted);text-align:center;padding:40px;font-size:0.85rem;font-style:italic}
+
+/* GENERIC OVERLAY MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:900;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:22px;width:290px;display:flex;flex-direction:column;gap:13px;box-shadow:0 24px 64px rgba(0,0,0,.6);max-width:95vw}
+.modal-ttl{font-family:var(--disp);font-size:1.35rem;letter-spacing:2px;color:var(--green)}
+.modal-acts{display:flex;gap:7px}
+.modal-acts .btn{flex:1;font-size:.85rem;padding:8px}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;display:flex;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;pointer-events:none;transition:opacity .2s}
+.lightbox.open{opacity:1;pointer-events:all}
+.lightbox img{max-width:90vw;max-height:82vh;border:1px solid var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-brand">
+    <img src="data:image/jpeg;base64,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" alt="KEKW"/>
+    <div class="hdr-brand-text">
+      <div class="logo">KEKW<span>CLIPS</span></div>
+      <div class="logo-ver">v0.23</div>
+    </div>
+  </div>
+  <div class="hdr-stats" style="flex:1;justify-content:flex-end">
+    <div class="hdr-chip"><div class="hdr-chip-l">Stream Duration</div><div class="hdr-chip-v p" id="hdr-dur">—</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Viewers</div><div class="hdr-chip-v g" id="hdr-viewers">—</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Uniq Chatters/min</div><div class="hdr-chip-v" id="hdr-uniq-chatters" style="color:var(--purple-light)">0</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Date / Time</div><div class="hdr-chip-v" id="hdr-clock">—</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Total KEKWs</div><div class="hdr-chip-v p" id="hdr-kekws">0</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Spikes</div><div class="hdr-chip-v g" id="hdr-spikes">0</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">All Time High</div><div class="hdr-chip-v" id="hdr-ath" style="color:var(--purple)">0</div></div>
+    <div class="hdr-chip hdr-chip-wide"><div class="hdr-chip-l">Stream Title</div><div class="hdr-chip-v" id="hdr-stream-title" style="color:var(--dim);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">—</div></div>
+    <div class="hdr-chip"><div class="hdr-chip-l">Category</div><div class="hdr-chip-v" id="hdr-stream-cat" style="color:var(--gold);font-size:.85rem">—</div></div>
+  </div>
+  <div class="hdr-right">
+    <button onclick="captureStats()" title="Save stats as PNG (5:7)" style="background:none;border:1px solid rgba(255,255,255,.2);border-radius:4px;color:#fff;padding:4px 8px;cursor:pointer;font-size:1rem;line-height:1;transition:border-color .15s" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='rgba(255,255,255,.2)'">📷</button>
+    <div class="hdr-stream-info">
+      <div class="hdr-mon-left">
+        <div class="hdr-mon-dur" id="hdr-mon-dur">—</div>
+        <div class="hdr-monitoring">Monitoring <span class="pulse" id="hdr-mon-pulse">●</span></div>
+      </div>
+      <div class="hdr-streamer" id="hdr-streamer">—</div>
+    </div>
+    <div class="status-block">
+      <div class="dot" id="dot"></div>
+      <span id="status-text">OFFLINE</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
+  <div class="sb-scroll">
+
+    <!-- Channel config — collapsible -->
+    <div class="cfg-section" id="cfg-channel">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-channel')">
+        <span class="cfg-hdr-ttl">📡 Channel</span>
+        <span class="cfg-arrow">▼</span>
+      </div>
+      <div class="cfg-body">
+        <div class="field">
+          <div class="lbl">Channel Name</div>
+          <div class="ch-row">
+            <input type="text" id="slug" value="iceposeidon" placeholder="streamer username" oninput="updateStar()" />
+            <button class="icon-btn" id="star-btn" onclick="quickSaveFav()" title="Save">☆</button>
+            <button class="icon-btn" id="sound-btn" onclick="toggleSound()" title="Sound">🔇</button>
+          </div>
+          <div class="hint">Case-insensitive. Chatroom ID auto-resolved.</div>
+          <div class="fav-bubbles" id="fav-bubbles"></div>
+        </div>
+        <div class="field">
+          <div class="lbl" style="display:flex;justify-content:space-between;align-items:center">
+            <span>OAuth Token <span style="color:var(--muted)">(optional)</span></span>
+            <button onclick="showOAuthHelp()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:1px 6px;font-size:0.5rem;cursor:pointer;letter-spacing:1px" title="How to get your token">? HELP</button>
+          </div>
+          <input type="text" id="token" placeholder="302946856|..." autocomplete="off"/>
+          <div class="hint">Optional. Masked when unfocused. Not required for clip finding. <span style="color:var(--muted);font-size:0.48rem">Note: Full "Login with Kick" requires a registered Kick app with a server redirect URI — not possible from a local HTML file. Use the token method instead.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spike config — collapsible -->
+    <div class="cfg-section" id="cfg-spike">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-spike')">
+        <span class="cfg-hdr-ttl">⚡ Spike Detection</span>
+        <span class="cfg-arrow">▼</span>
+      </div>
+      <div class="cfg-body">
+        <div class="row2">
+          <div class="field"><div class="lbl">Min KEKWs</div><input type="number" id="threshold" value="10" min="1" data-tip="Minimum number of KEKW messages in the\ntime window needed to trigger a spike."></div>
+          <div class="field"><div class="lbl">Window (sec)</div><input type="number" id="window" value="10" min="1" data-tip="Rolling time window in seconds.\nKEKW messages older than this are discarded."></div>
+        </div>
+        <div class="field"><div class="lbl">Cooldown (sec)</div><input type="number" id="cooldown" value="30" min="5" data-tip="Minimum seconds between recorded spikes.\nPrevents rapid repeat triggers."></div>
+        <button class="btn" id="apply-spike-btn" onclick="applySpike()" style="background:var(--panel2);border:1px solid var(--purple);color:var(--purple-light);font-size:.75rem;padding:6px;letter-spacing:1px">✓ APPLY SETTINGS</button>
+        <div id="spike-status" style="font-size:0.58rem;color:var(--muted);text-align:center;min-height:14px"></div>
+      </div>
+    </div>
+
+    <!-- Connect/Monitor panel — collapsible -->
+    <div class="cfg-section" id="cfg-monitor">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-monitor')">
+        <span class="cfg-hdr-ttl">🎮 Monitor Controls</span>
+        <span class="cfg-arrow">▼</span>
+      </div>
+      <div class="cfg-body">
+        <button class="btn btn-g" id="conn-btn" onclick="toggleConnect()">CONNECT</button>
+        <button class="btn btn-o" onclick="clearAll()">CLEAR LOG</button>
+        <button class="btn btn-o" onclick="openSessions()">📊 Session History</button>
+        <button class="btn btn-o" id="test-spike-btn" onclick="testSpike()" title="Force a test spike to verify highlight log is working">🧪 TEST SPIKE</button>
+      </div>
+    </div>
+
+    <!-- KEKW Leaderboard panel — collapsible -->
+    <div class="cfg-section" id="cfg-lb">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-lb')">
+        <span class="cfg-hdr-ttl">🏆 KEKW Leaderboard</span>
+        <span class="cfg-arrow">▼</span>
+      </div>
+      <div class="cfg-body" style="padding:8px">
+        <div class="ldrbrd" id="overall-lb"><div class="ldrbrd-empty">Connect to start</div></div>
+      </div>
+    </div>
+
+    <!-- Word Cloud panel — collapsible -->
+    <div class="cfg-section" id="cfg-wc">
+      <div class="cfg-hdr" onclick="toggleCfg('cfg-wc')">
+        <span class="cfg-hdr-ttl">☁️ Word Cloud</span>
+        <span class="cfg-arrow">▼</span>
+      </div>
+      <div class="cfg-body" style="padding:6px;max-height:180px;overflow-y:auto">
+        <div id="word-cloud-sb"><div style="font-size:0.58rem;color:var(--muted);font-style:italic;text-align:center;padding:4px">Connect to build word cloud</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="chart-wrap">
+    <div class="chart-hdr">
+      <span class="chart-ttl">KEKW messages per second — last 60s</span>
+      <span class="chart-rate" id="rate">0/s</span><span id="kekw-window-cnt" style="font-size:0.65rem;color:var(--muted);margin-left:8px">window: 0</span>
+    </div>
+    <canvas id="chart"></canvas>
+  </div>
+  <div class="log-wrap">
+    <div class="log-bar">
+      <span class="log-ttl">Highlight Log</span>
+      <span class="log-cnt" id="log-cnt">0 MOMENTS</span>
+    </div>
+    <div class="rg col-hds">
+      <span class="col-h">VOD TIME</span>
+      <span class="col-h">KEKWs</span>
+      <span class="col-h">VIEWERS</span>
+      <span class="col-h">ΔVIEW</span>
+      <span class="col-h">UNIQ</span>
+      <span class="col-h">WALL TIME</span>
+      <span class="col-h">TOP SPAMMERS</span>
+      <span class="col-h">FRAME / CLIP</span>
+    </div>
+    <div id="log-body">
+      <div class="empty"><img src="data:image/jpeg;base64,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" style="width:40px;height:40px;border-radius:4px;opacity:.35;margin-bottom:4px"><span>No spikes yet — connect to start</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RIGHT COL ══ -->
+<div class="chat-col">
+
+  <div class="rpanel grow" id="panel-chat">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-chat')">
+      <span class="rpanel-ttl" data-tip="Live chat feed from the channel.\nKEKW messages are highlighted purple.">💬 Live Chat</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="rpanel-badge" id="chat-cnt">0</span>
+        <span class="c-arrow">▼</span>
+      </div>
+    </div>
+    <div class="chat-meta">
+      <div class="chat-meta-item"><div class="chat-meta-l">Unique Chatters (60s)</div><div class="chat-meta-v" id="uniq-chatters">0</div></div>
+      <div class="chat-meta-item" style="text-align:right"><div class="chat-meta-l">Total Messages</div><div class="chat-meta-v" id="total-msgs">0</div></div>
+    </div>
+    <div class="rpanel-body">
+      <div class="chat-container">
+        <div class="chat-feed" id="chat-feed">
+          <div class="empty" id="chat-empty"><div class="empty-ico">💬</div><span>Connect to see chat</span></div>
+        </div>
+        <button class="scroll-bottom-btn" id="scroll-btn" onclick="scrollChatBottom()" style="display:none">▼ latest</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.chat-col -->
+<div class="right-col">
+
+  <div class="rpanel" id="panel-ks" style="max-height:130px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-ks')" style="background:rgba(127,29,29,.2)">
+      <span class="rpanel-ttl" style="color:#fca5a5" data-tip="Monitors for any message sent by the\nKickSupport account. Triggers a sound alert.">🔴 KickSupport Watch</span>
+      <span class="rpanel-badge" id="ks-cnt" style="color:var(--red)">0</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="ks-body"><div class="ks-empty">No KickSupport activity</div></div>
+  </div>
+
+  <div class="rpanel" id="panel-vs">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-vs')">
+      <span class="rpanel-ttl" data-tip="Tracks verified Kick partners who appear\nin chat during this monitoring session.">✅ Verified Watchers</span>
+      <span class="rpanel-badge" id="vs-cnt">0</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="vs-body"><div class="vs-empty">None spotted yet</div></div>
+  </div>
+
+  <div class="rpanel" id="panel-cx" style="max-height:150px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-cx')" style="background:rgba(168,85,247,.08)">
+      <span class="rpanel-ttl" style="color:var(--purple-light);display:flex;align-items:center;gap:5px"><img src="data:image/png;base64,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" style="width:16px;height:16px;border-radius:3px;vertical-align:middle"> CX DETECTOR</span>
+      <span class="rpanel-badge" id="cx-cnt" style="color:var(--purple-light)">0</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="cx-body"><div class="ev-empty">No CX events detected</div></div>
+  </div>
+
+  <div class="rpanel" id="panel-pw" style="max-height:160px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-pw')" style="background:rgba(251,191,36,.06)">
+      <span class="rpanel-ttl" style="color:var(--gold)" data-tip="Parses KickBot messages to track tips and\ngifted subs. KPP estimates hourly payout.">💰 Pocket Watcher</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body">
+      <div class="pw-section"><div class="pw-section-ttl">Tips (USD)</div><div id="tips-lb"><div class="pw-empty">No tips yet</div></div></div>
+      <div class="pw-section"><div class="pw-section-ttl">Gifted Subs</div><div id="gifts-lb"><div class="pw-empty">No gifted subs yet</div></div></div>
+      <div class="pw-section" title="Kick Projected Payout — estimated hourly revenue based on average viewers. $10 per 100 viewers per hour.">
+        <div class="pw-section-ttl" style="display:flex;align-items:center;gap:4px">💵 KPP <span style="font-size:0.42rem;color:var(--muted)">(Kick Projected Payout)</span></div>
+        <div id="kpp-display"><div class="pw-empty">Connect to track KPP</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rpanel" id="panel-f" style="max-height:150px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-f')" style="background:rgba(239,68,68,.07)">
+      <span class="rpanel-ttl" style="color:#60a5fa" data-tip="Detects chat spam waves of the letter F.\nGroups messages into events with start/end time.">🅵 F Detector</span>
+      <span class="rpanel-badge" id="f-cnt" style="color:#f87171">0</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="f-body"><div class="ev-empty">No F events detected</div></div>
+  </div>
+
+  <div class="rpanel" id="panel-muted" style="max-height:150px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-muted')" style="background:rgba(96,165,250,.07)">
+      <span class="rpanel-ttl" style="color:#f87171" data-tip="Detects when chat reacts to someone being muted.\nLooks for messages containing the word 'muted'.">🔇 Muted Detector</span>
+      <span class="rpanel-badge" id="muted-cnt" style="color:#60a5fa">0</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="muted-body"><div class="ev-empty">No muted events detected</div></div>
+  </div>
+
+  <div class="rpanel" id="panel-spam" style="max-height:150px">
+    <div class="rpanel-hdr" onclick="togglePanel('panel-spam')">
+      <span class="rpanel-ttl" data-tip="Flags users who send the same long message\n3+ times. Ignores emote-heavy messages.">🚨 Spammer Detector</span>
+      <span class="c-arrow">▼</span>
+    </div>
+    <div class="rpanel-body" id="spam-body"><div class="spam-empty">No repeat spammers detected</div></div>
+  </div>
+<!-- word cloud moved to sidebar -->
+
+</div>
+</div>
+
+<!-- SESSION HISTORY OVERLAY -->
+<div class="sess-overlay" id="sess-overlay">
+  <div class="sess-modal">
+    <div class="sess-hdr">
+      <span class="sess-title">📊 Session History</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="sess-filter" onchange="renderSessions()" style="background:var(--panel2);color:var(--text);border:1px solid var(--border);padding:4px 8px;border-radius:4px;font-family:var(--mono);font-size:0.75rem">
+          <option value="">All Streamers</option>
+        </select>
+        <button onclick="closeSessions()" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:4px">✕</button>
+      </div>
+    </div>
+    <div class="sess-body" id="sess-body">Loading…</div>
+  </div>
+</div>
+
+<!-- DISCONNECT ALERT -->
+<div id="disc-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--red-dark);border:2px solid var(--red);border-radius:10px;padding:28px 32px;text-align:center;max-width:380px;box-shadow:0 0 40px rgba(239,68,68,.4)">
+    <div style="font-family:var(--disp);font-size:2rem;color:#fff;letter-spacing:3px;margin-bottom:8px">⚠ DISCONNECTED</div>
+    <div style="font-size:0.78rem;color:#fca5a5;margin-bottom:16px">Lost connection to <span id="disc-slug" style="color:#fff;font-weight:600"></span></div>
+    <div id="disc-retry-msg" style="font-size:0.68rem;color:#fca5a5;margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="retryNow()" style="font-family:var(--disp);background:var(--green);color:#000;border:none;border-radius:4px;padding:9px 18px;font-size:1rem;cursor:pointer;letter-spacing:2px">RECONNECT NOW</button>
+      <button onclick="dismissDisc()" style="font-family:var(--disp);background:transparent;color:#fca5a5;border:1px solid var(--red);border-radius:4px;padding:9px 18px;font-size:1rem;cursor:pointer;letter-spacing:2px">DISMISS</button>
+    </div>
+  </div>
+</div>
+
+<!-- OAUTH HELP MODAL -->
+<div class="overlay" id="oauth-overlay" onclick="if(event.target===this)closeOAuthHelp()">
+  <div class="modal" style="width:380px;max-width:95vw">
+    <div class="modal-ttl">🔑 How to Get Your Token</div>
+    <div style="font-size:0.65rem;color:var(--dim);line-height:1.7">
+      <b style="color:var(--green)">Method (Chrome / Edge / Firefox):</b><br>
+      1. Open <code style="color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px">kick.com</code> and make sure you're logged in.<br>
+      2. Press <code style="color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px">F12</code> to open DevTools.<br>
+      3. Click the <b>Network</b> tab.<br>
+      4. Reload the page or click anywhere on Kick.<br>
+      5. In the filter box type <code style="color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px">api/v2</code>.<br>
+      6. Click any request in the list.<br>
+      7. In the <b>Headers</b> panel find <code style="color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px">Authorization</code>.<br>
+      8. Copy the value <b>after</b> the word <code style="color:var(--green);background:rgba(83,252,24,.1);padding:1px 4px;border-radius:3px">Bearer </code> — paste it into the token field.<br><br>
+      <b style="color:var(--muted)">Why not "Login with Kick"?</b><br>
+      Kick's official OAuth requires a registered app with a server-side redirect URI. A local HTML file cannot receive the OAuth callback, so the manual token method is the only option for this tool.
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-o" onclick="closeOAuthHelp()">CLOSE</button>
+      <button class="btn btn-g" onclick="window.open('https://kick.com','_blank');closeOAuthHelp()">OPEN KICK.COM</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lb-img" src="" alt="Spike frame"/>
+</div>
+<!-- Tooltip element — rendered at body level so it's never clipped -->
+<div id="tooltip-el"></div>
+
+<!-- Hidden stat carriers — JS updates these; header chips show the values -->
+<span id="s-record" style="display:none"></span>
+<span id="s-spikes" style="display:none"></span>
+<span id="s-total" style="display:none"></span>
+<div id="word-cloud" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const KEKW_IMG='data:image/jpeg;base64,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';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let ws=null,connected=false,pingTimer=null,keyIdx=0;
+let autoRetryTimer=null,retryCount=0,retryEnabled=false;
+let streamStartEpoch=null,connectEpoch=null,sessionStartEpoch=null;
+let viewerCount=0,prevViewerCount=0,viewerPollTimer=null;
+let totalKekws=0,spikes=0,lastSpike=0,allTimeRecord=0;
+let kekwMsgTs=[];
+let highlights=[],chatCount=0,totalMsgCount=0;
+let soundEnabled=true,audioCtx=null;
+let currentSlug='',currentThumbnailUrl='',currentLivestreamId=null;
+let currentUniqChatters=0;
+
+const overallKekwMap={};
+const windowKekwMap={};
+const chatterWindow=[];
+const spamTracker={};
+const verifiedStreamers={};
+const tipsMap={};
+const giftsMap={};
+// KPP tracking — viewer samples for rolling average
+const kppViewerSamples=[];
+let kppLastHrEstimate=0;
+// Track how many spikes each clip has been assigned to — max 2 per clip
+const clipUsageCount=new Map(); // clipId -> count
+let ksSeen=0;
+let wordFreq={};
+const SESSIONS_KEY='kekwclips_sessions';
+
+// F & Muted event trackers
+// event: {startVod, startWall, endVod, endWall, count, active}
+let fEvents=[],fCurrent=null,fLastTs=0;
+let mutedEvents=[],mutedCurrent=null,mutedLastTs=0;
+let cxEvents=[],cxCurrent=null,cxLastTs=0;
+const cxWindowUsers=new Set(); // unique users in current CX window
+const CX_USER_THRESHOLD=10;
+const EVENT_GAP_MS=8000; // gap before closing an event
+
+const MAX_CHAT=400;
+const KEYS=['32cbd69e4b950bf97679','eb1d5f283081a78b932c'];
+
+// ── KEKW DETECTION ─────────────────────────────────────────────────────────
+// Uses simple word-boundary \b which works in all browsers
+// Also catches [emote:37226:KEKW] exact emote tag
+function testKekw(t){
+  if(!t)return false;
+  if(t.indexOf('KEKW')===-1&&t.indexOf('kekw')===-1&&t.indexOf('Kekw')===-1)return false;
+  return /\[emote:37226:KEKW\]/i.test(t)||/\bKEKW\b/i.test(t);
+}
+function countKekw(t){
+  if(!t)return 0;
+  var n=0;
+  var m1=t.match(/\[emote:37226:KEKW\]/gi);if(m1)n+=m1.length;
+  var stripped=t.replace(/\[emote:37226:KEKW\]/gi,'___');
+  var m2=stripped.match(/\bKEKW\b/gi);if(m2)n+=m2.length;
+  return n;
+}
+function hlKekw(h){
+  return h
+    .replace(/\[emote:37226:KEKW\]/gi,'<span class="kw">KEKW</span>')
+    .replace(/\b(KEKW)\b/gi,'<span class="kw">$1</span>');
+}
+
+// Gradient purple for KEKW count — scales from light (low) to dark (high)
+function kekwColor(count){
+  // 0-10: very light purple, 50+: darkest
+  const t=Math.min(count,80)/80;
+  const L=Math.round(75-t*45); // 75% lightness at 0, 30% at max
+  return `hsl(270,70%,${L}%)`;
+}
+
+// ── AUDIO ──────────────────────────────────────────────────────────────────
+function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx}
+function tone(freq,dur,type='sine',vol=0.18){
+  try{const c=getAC(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=type;o.frequency.setValueAtTime(freq,c.currentTime);g.gain.setValueAtTime(vol,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+dur);o.start(c.currentTime);o.stop(c.currentTime+dur);}catch{}
+}
+function spikeSound(isRecord){if(!soundEnabled)return;if(isRecord){tone(880,.15,'sine',.22);setTimeout(()=>tone(1100,.15,'sine',.22),150);setTimeout(()=>tone(1320,.3,'sine',.22),300);setTimeout(()=>tone(1760,.4,'sine',.25),500)}else{tone(520,.08,'square',.12);setTimeout(()=>tone(660,.2,'sine',.15),80)}}
+function ksSound(){if(!soundEnabled)return;tone(300,.4,'sine',.12);setTimeout(()=>tone(240,.5,'sine',.08),350)}
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  const b=document.getElementById('sound-btn');b.textContent=soundEnabled?'🔔':'🔇';b.classList.toggle('on',soundEnabled);
+  if(soundEnabled){try{getAC().resume()}catch{}tone(440,.1,'sine',.08)}
+  showToast(soundEnabled?'🔔 Sound ON':'🔇 Sound OFF');
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────────────────
+function fmtDur(ms){if(ms<0)ms=0;const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;return h>0?`${h}h ${pad(m)}m ${pad(ss)}s`:`${pad(m)}m ${pad(ss)}s`}
+function pad(n){return String(n).padStart(2,'0')}
+function fmtClock(){const n=new Date();return n.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' '+n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+setInterval(()=>{
+  document.getElementById('hdr-clock').textContent=fmtClock();
+  if(streamStartEpoch)document.getElementById('hdr-dur').textContent=fmtDur(Date.now()-streamStartEpoch);
+  if(sessionStartEpoch)document.getElementById('hdr-mon-dur').textContent=fmtDur(Date.now()-sessionStartEpoch);
+  updateUniqueChatters();
+  checkEventGaps();
+  updateKPP();
+},1000);
+
+// ── VOD TS ─────────────────────────────────────────────────────────────────
+function getVodTs(){const ref=streamStartEpoch||connectEpoch;if(!ref)return'--:--:--';const e=Math.max(0,Math.floor((Date.now()-ref)/1000));return`${pad(Math.floor(e/3600))}:${pad(Math.floor((e%3600)/60))}:${pad(e%60)}`}
+
+// ── CORS PROXY ─────────────────────────────────────────────────────────────
+// Multiple proxies tried in random order to avoid rate-limit bans
+// when multiple tabs of the app are open simultaneously.
+function parseChannelData(data){
+  if(!data?.chatroom?.id)return null;
+  const st=data.livestream?.start_time;
+  let thumbUrl=null;const th=data.livestream?.thumbnail;
+  if(typeof th==='string')thumbUrl=th;
+  else if(th?.src)thumbUrl=th.src;
+  else if(th?.url)thumbUrl=th.url;
+  return{
+    chatroomId:data.chatroom.id,
+    startTime:st?st.replace(' ','T')+'Z':null,
+    viewers:data.livestream?.viewer_count??0,
+    thumbnailUrl:thumbUrl,
+    livestreamId:data.livestream?.id??null,
+    streamTitle:data.livestream?.session_title||'',
+    category:data.livestream?.categories?.[0]?.name||data.livestream?.category?.name||''
+  };
+}
+
+async function getChannelInfo(slug){
+  const apiUrl='https://kick.com/api/v2/channels/'+slug;
+  const enc=encodeURIComponent(apiUrl);
+  // Full proxy list — tried in shuffled order to distribute load
+  const allProxies=[
+    `https://api.allorigins.win/get?url=${enc}`,
+    `https://api.codetabs.com/v1/proxy?quest=${apiUrl}`,
+    `https://thingproxy.freeboard.io/fetch/${apiUrl}`,
+    `https://proxy.cors.sh/${apiUrl}`,
+    `https://corsproxy.io/?${enc}`,
+  ];
+  // Shuffle so multiple open tabs don't all hammer the same proxy
+  const proxies=[...allProxies].sort(()=>Math.random()-.5);
+  for(const url of proxies){
+    try{
+      const res=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(!res.ok)continue;
+      const wrapper=await res.json();
+      // allorigins wraps in .contents; others return raw JSON
+      const raw=wrapper.contents!==undefined?wrapper.contents:JSON.stringify(wrapper);
+      const data=typeof raw==='string'?JSON.parse(raw):raw;
+      const parsed=parseChannelData(data);
+      if(parsed)return parsed;
+    }catch{continue}
+  }
+  return null;
+}
+async function pollViewers(slug){try{const i=await getChannelInfo(slug);if(i){viewerCount=i.viewers;document.getElementById('hdr-viewers').textContent=viewerCount.toLocaleString()}}catch{}}
+
+// ── THUMBNAIL ──────────────────────────────────────────────────────────────
+async function fetchThumbDataUrl(){
+  // Refresh thumbnail URL from API in case it changed
+  if(currentSlug){
+    try{const info=await getChannelInfo(currentSlug);if(info?.thumbnailUrl)currentThumbnailUrl=info.thumbnailUrl;}catch{}
+  }
+  if(!currentThumbnailUrl)return null;
+  return await fetchProxyImage(currentThumbnailUrl);
+}
+function openLightbox(src){document.getElementById('lb-img').src=src;document.getElementById('lightbox').classList.add('open')}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open')}
+
+// ── CHART ──────────────────────────────────────────────────────────────────
+const BUCKETS=60;
+let bars=new Array(BUCKETS).fill(0),bucketTick=Date.now();
+const cv=document.getElementById('chart'),cx=cv.getContext('2d');
+function resizeCv(){cv.width=cv.offsetWidth;cv.height=cv.offsetHeight}
+resizeCv();window.addEventListener('resize',resizeCv);
+
+// Pre-load kekw image for chart
+const kekwChartImg=new Image();kekwChartImg.src=KEKW_IMG;
+
+function drawChart(){
+  const W=cv.width,H=cv.height-14; // reserve bottom for kekw icons
+  cx.clearRect(0,0,W,cv.height);
+  const max=Math.max(...bars,1),bw=W/BUCKETS;
+  bars.forEach((v,i)=>{
+    if(!v)return;
+    const bh=(v/max)*(H-12),a=.3+(i/BUCKETS)*.7;
+    cx.fillStyle=(v/max)>.65?`rgba(168,85,247,${a})`:`rgba(168,85,247,${a*.42})`;
+    cx.fillRect(i*bw+1,H-bh,bw-2,bh);
+    // Count label above bar — stays with bar as it scrolls
+    if(v>0){
+      cx.fillStyle=`rgba(200,150,255,${a})`;
+      cx.font=`${Math.max(7,Math.min(10,Math.floor(bw)-1))}px monospace`;
+      cx.textAlign='center';
+      cx.fillText(v,i*bw+bw/2,H-bh-2);
+    }
+    // KEKW icon below bar with matching opacity
+    if(kekwChartImg.complete&&kekwChartImg.naturalWidth>0){
+      cx.globalAlpha=a*0.7;
+      cx.drawImage(kekwChartImg,i*bw+1,H+2,bw-2,12);
+      cx.globalAlpha=1;
+    }
+  });
+  // Threshold line
+  const thr=(nv('threshold')||10)/(nv('window')||10),ly=H-(thr/max)*(H-12);
+  if(thr<=max){cx.strokeStyle='rgba(168,85,247,.4)';cx.setLineDash([4,4]);cx.beginPath();cx.moveTo(0,ly);cx.lineTo(W,ly);cx.stroke();cx.setLineDash([])}
+}
+
+setInterval(()=>{
+  const now=Date.now();
+  if(now-bucketTick>=1000){
+    bars.shift();bars.push(kekwMsgTs.filter(t=>t>=now-1000).length);
+    bucketTick=now;document.getElementById('rate').textContent=bars[bars.length-1]+'/s';
+  }
+  drawChart();checkSpike();
+},200);
+
+// ── UNIQUE CHATTERS ────────────────────────────────────────────────────────
+function updateUniqueChatters(){
+  const now=Date.now(),cutoff=now-60000;
+  const recent=chatterWindow.filter(e=>e.ts>=cutoff);
+  chatterWindow.splice(0,chatterWindow.length,...recent);
+  currentUniqChatters=new Set(recent.map(e=>e.user)).size;
+  document.getElementById('uniq-chatters').textContent=currentUniqChatters;
+  setEl('hdr-uniq-chatters',currentUniqChatters);
+}
+
+// ── LEADERBOARD ────────────────────────────────────────────────────────────
+function addToOverallLb(user,count){overallKekwMap[user]=(overallKekwMap[user]||0)+count;renderOverallLb()}
+function renderOverallLb(){
+  const sorted=Object.entries(overallKekwMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const el=document.getElementById('overall-lb');
+  if(!sorted.length){el.innerHTML='<div class="ldrbrd-empty">No KEKWs yet</div>';return}
+  const med=['gold','silver','bronze'];
+  el.innerHTML=sorted.map(([name,cnt],i)=>`<div class="ldrbrd-row"><div class="ldrbrd-rank ${med[i]||''}">${i+1}</div><div class="ldrbrd-name" title="${esc(name)}">${esc(name)}</div><div class="ldrbrd-cnt">${cnt}</div></div>`).join('');
+}
+
+// Null-safe DOM text setter — prevents crashes when elements are missing
+function setEl(id,val){var e=document.getElementById(id);if(e)e.textContent=val;}
+
+// ── SPIKE ──────────────────────────────────────────────────────────────────
+function checkSpike(){
+  if(!connected)return;
+  const now=Date.now();
+  const winMs=(nv('window')||10)*1000;
+  const cool=(nv('cooldown')||30)*1000;
+  const thr=nv('threshold')||10;
+  // Keep only timestamps within the window
+  kekwMsgTs=kekwMsgTs.filter(function(t){return t>=now-winMs});
+  const cnt=kekwMsgTs.length;
+  if(cnt>=thr&&now-lastSpike>cool){
+    console.log('[KEKWClips] SPIKE! count='+cnt+' thr='+thr+' win='+winMs+'ms');
+    lastSpike=now;
+    recordSpike(cnt);
+  }
+}
+// Manual test spike (for debugging)
+function testSpike(){
+  if(!connected){showToast('Connect first');return}
+  console.log('[KEKWClips] Manual test spike triggered');
+  recordSpike(99);
+}
+
+function getTopSpammers(windowMs){
+  const now=Date.now(),cutoff=now-windowMs,counts={};
+  for(const[user,ts]of Object.entries(windowKekwMap)){const n=ts.filter(t=>t>=cutoff).length;if(n>0)counts[user]=n}
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+}
+function pruneWindowMap(windowMs){const cutoff=Date.now()-windowMs;for(const u of Object.keys(windowKekwMap)){windowKekwMap[u]=windowKekwMap[u].filter(t=>t>=cutoff);if(!windowKekwMap[u].length)delete windowKekwMap[u]}}
+
+function recordSpike(msgCount){
+  const winMs=nv('window')*1000,now2=Date.now(),cutoff=now2-winMs;
+  let exactCount=0;for(const ts of Object.values(windowKekwMap))exactCount+=ts.filter(t=>t>=cutoff).length;
+  const count=exactCount||msgCount;
+  spikes++;
+  const isRecord=count>allTimeRecord;
+  if(isRecord){
+    allTimeRecord=count;
+    setEl('s-record',allTimeRecord);
+    setEl('hdr-ath',allTimeRecord);
+  }
+  setEl('s-spikes',spikes);
+  setEl('hdr-spikes',spikes);
+  const nowD=new Date(),topSpammers=getTopSpammers(winMs),deltaViewers=viewerCount-prevViewerCount;
+  const h={id:Date.now(),spikeEpoch:Date.now(),vod:getVodTs(),count,viewers:viewerCount,deltaViewers,uniqChatters:currentUniqChatters,wallDate:nowD.toLocaleDateString([],{month:'short',day:'numeric'}),wallTime:nowD.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),rate:(count/nv('window')).toFixed(1),isRecord,topSpammers,frameUrl:null};
+  highlights.unshift(h);prevViewerCount=viewerCount;
+  document.getElementById('log-cnt').textContent=highlights.length+' MOMENTS';
+  document.querySelector('#log-body .empty')?.remove();
+  addRow(h);scheduleFrameCapture(h);spikeSound(isRecord);
+  showToast((isRecord?'🏆 NEW RECORD! ':'🔥 SPIKE! ')+count+' KEKWs at '+h.vod,isRecord?'record':'');
+  // Search for clips at 10s, 30s, 60s after spike — gives viewers time to clip
+  // Countdown timer starts immediately in the ci element
+  startClipCountdown(h.id, h);
+  saveSessionSnapshot(h);
+}
+
+function addRow(h){
+  const body=document.getElementById('log-body');
+  const row=document.createElement('div');
+  row.className='hi-row rg fresh'+(h.isRecord?' record-row':'');row.id='r'+h.id;
+  row.appendChild(mkEl('span','vts',h.vod));
+  // KEKW count: color scales with value
+  const kcEl=mkEl('span','kc',String(h.count));kcEl.style.color=kekwColor(h.count);row.appendChild(kcEl);
+  row.appendChild(mkEl('span','vc',h.viewers.toLocaleString()));
+  // Delta viewers
+  const vdEl=document.createElement('span');const big=Math.abs(h.deltaViewers)>=15000;const sign=h.deltaViewers>=0?'+':'';
+  vdEl.className='vd'+(big?' big-gain':'');vdEl.textContent=h.deltaViewers===0?'—':sign+h.deltaViewers.toLocaleString();row.appendChild(vdEl);
+  // Unique chatters at spike
+  row.appendChild(mkEl('span','uc-cell',h.uniqChatters));
+  // Wall time
+  const wtEl=document.createElement('div');wtEl.className='wt';wtEl.innerHTML=`<div style="color:var(--muted);font-size:.54rem">${h.wallDate}</div><div>${h.wallTime}</div>`;row.appendChild(wtEl);
+  // Top spammers as tag bubbles
+  const tagsEl=document.createElement('div');tagsEl.className='spam-tags';
+  if(h.topSpammers.length){
+    // Find max count to determine if all are equal
+    const maxCnt=h.topSpammers[0][1];
+    h.topSpammers.forEach(([name,cnt],i)=>{
+      // Color only changes if count differs from max
+      const fraction=maxCnt>0?cnt/maxCnt:1;
+      const L=Math.round(22+fraction*18); // 22-40% lightness
+      const tag=document.createElement('div');tag.className='spam-tag';
+      tag.style.background=`hsl(270,55%,${L}%)`;
+      tag.innerHTML=`<span class="st-name">${esc(name.slice(0,9))}</span><span class="st-cnt" style="color:hsl(270,65%,${L+20}%)"> ${cnt}</span>`;
+      tagsEl.appendChild(tag);
+    });
+  }else{const d=document.createElement('span');d.style.cssText='font-size:.5rem;color:var(--muted)';d.textContent='—';tagsEl.appendChild(d)}
+  row.appendChild(tagsEl);
+  // Combined frame+clip cell
+  const frameClipCell=document.createElement('div');frameClipCell.className='frame-clip-cell';frameClipCell.id='fcc'+h.id;
+  const tw=document.createElement('div');tw.className='thumb-wrap';tw.id='tw'+h.id;tw.innerHTML='<div class="no-thumb">Capturing…</div>';
+  frameClipCell.appendChild(tw);
+  // Clip info area (title, user, link) — populated by findClips
+  const clipInfo=document.createElement('div');clipInfo.className='clip-info';clipInfo.id='ci'+h.id;
+  clipInfo.innerHTML='<span class="clip-searching">🔍 searching…</span>';
+  frameClipCell.appendChild(clipInfo);
+  row.appendChild(frameClipCell);
+  body.insertBefore(row,body.firstChild);
+  setTimeout(()=>row.classList.remove('fresh'),3000);
+}
+function mkEl(tag,cls,text){const e=document.createElement(tag);e.className=cls;e.textContent=text;return e}
+
+function scheduleFrameCapture(h){
+  const attempts=[800,2500,6000];let done=false;
+  attempts.forEach(delay=>{setTimeout(async()=>{if(done)return;const url=await fetchThumbDataUrl();if(url){done=true;h.frameUrl=url;updateRowFrame(h.id,url)}else if(delay===attempts[attempts.length-1]){const w=document.getElementById('tw'+h.id);if(w)w.innerHTML='<div class="no-thumb">No thumbnail</div>'}},delay)});
+}
+function updateRowFrame(id,dataUrl){const wrap=document.getElementById('tw'+id);if(!wrap)return;wrap.innerHTML='';const img=document.createElement('img');img.src=dataUrl;const ol=document.createElement('div');ol.className='thumb-ol';ol.textContent='🔍';wrap.appendChild(img);wrap.appendChild(ol);wrap.onclick=()=>openLightbox(dataUrl)}
+
+// ── PROXY IMAGE FETCH — returns a data URL via allorigins proxy ────────────
+async function fetchProxyImage(imgUrl){
+  const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(imgUrl)}`;
+  try{
+    const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+    if(!res.ok)return null;
+    const blob=await res.blob();
+    if(blob.size<500)return null;
+    return await new Promise((ok,fail)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=fail;r.readAsDataURL(blob)});
+  }catch{return null}
+}
+
+// ── CLIP COUNTDOWN + MULTI-ATTEMPT SEARCH ─────────────────────────────────
+// Process:
+// 1. Spike fires at T+0. We show a countdown in the clip cell.
+// 2. First search at T+10s — some viewers may have already clipped.
+// 3. If no clip found, search again at T+30s and T+60s.
+// 4. Accept clips created up to 90 seconds AFTER the spike time
+//    (not just 30s — gives time for the clip to appear in the API).
+// 5. Clips are deduplicated across spikes (max 2 uses per clip ID).
+const CLIP_SEARCH_ATTEMPTS=[10,30,60]; // seconds after spike to search
+const CLIP_ACCEPT_WINDOW_MS=90000;     // accept clips up to 90s after spike
+
+function startClipCountdown(id, spikeObj){
+  const ci=document.getElementById('ci'+id);
+  if(!ci)return;
+  // Count down from first search time (10s)
+  let remaining=CLIP_SEARCH_ATTEMPTS[0];
+  let attemptIdx=0;
+  let found=false;
+  let countdownTimer=null;
+
+  function updateDisplay(){
+    if(found)return;
+    if(!document.getElementById('ci'+id))return; // row removed
+    const nextSearch=CLIP_SEARCH_ATTEMPTS[attemptIdx]||60;
+    ci.innerHTML=`<span class="clip-searching">🔍 ${remaining}s…</span>`;
+  }
+
+  function tick(){
+    if(found)return;
+    remaining--;
+    updateDisplay();
+    if(remaining>0){
+      countdownTimer=setTimeout(tick,1000);
+    }
+  }
+
+  function doSearch(){
+    if(found)return;
+    attemptIdx++;
+    findClipsAttempt(id, spikeObj, ()=>{
+      // Called when clip IS found
+      found=true;
+      clearTimeout(countdownTimer);
+    }, ()=>{
+      // Called when not found — schedule next attempt if any
+      if(attemptIdx<CLIP_SEARCH_ATTEMPTS.length){
+        const nextDelay=CLIP_SEARCH_ATTEMPTS[attemptIdx]-CLIP_SEARCH_ATTEMPTS[attemptIdx-1];
+        remaining=nextDelay;
+        updateDisplay();
+        countdownTimer=setTimeout(tick,1000);
+        setTimeout(doSearch, nextDelay*1000);
+      } else {
+        // All attempts exhausted
+        if(!found){
+          const ciF=document.getElementById('ci'+id);
+          if(ciF)ciF.innerHTML='<span class="clip-none">No clip found</span>';
+        }
+      }
+    });
+  }
+
+  // Start first countdown (10s)
+  remaining=CLIP_SEARCH_ATTEMPTS[0];
+  updateDisplay();
+  countdownTimer=setTimeout(tick,1000);
+  setTimeout(doSearch, CLIP_SEARCH_ATTEMPTS[0]*1000);
+}
+
+// ── CLIP FINDER — searches Kick for clips created near the spike timestamp ──
+// Instead of creating clips (blocked by CORS), we search for clips already
+// created by viewers within a window around the spike time.
+// findClips: manual retry from UI
+function findClips(id,h){startClipCountdown(id,h)}
+
+async function findClipsAttempt(id,h,onFound,onMiss){
+  // btn kept for legacy reference but clip info now shown in ci element
+  const btn=document.getElementById('cb'+id); // may be null — that's ok
+  if(!currentSlug){
+    const ci0=document.getElementById('ci'+id);
+    if(ci0)ci0.innerHTML='<span class="clip-none">No channel</span>';
+    return;
+  }
+  const ci0=document.getElementById('ci'+id);
+  if(ci0)ci0.innerHTML='<span class="clip-searching">🔍 searching…</span>';
+  try{
+    // Kick's public clip endpoint — fetch recent clips for the channel
+    const target=encodeURIComponent(`https://kick.com/api/v2/channels/${currentSlug}/clips?sort=date&time=day`);
+    const proxies=[
+      `https://api.allorigins.win/get?url=${target}`,
+      `https://corsproxy.io/?${target}`,
+    ];
+    let clips=null;
+    for(const proxyUrl of proxies){
+      try{
+        const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(8000)});
+        if(!r.ok)continue;
+        const w=await r.json();
+        const raw=w.contents!==undefined?w.contents:JSON.stringify(w);
+        const data=typeof raw==='string'?JSON.parse(raw):raw;
+        clips=data?.clips?.data||data?.data||data?.clips||[];
+        if(clips.length)break;
+      }catch{continue}
+    }
+    if(!clips||!clips.length){
+      if(onMiss)onMiss();
+      return;
+    }
+    // Find clips closest in time to the spike
+    // h.spikeEpoch is the epoch of the spike; clips have created_at
+    const spikeMs=h.spikeEpoch||Date.now();
+    const withDiff=clips.map(c=>{
+      const ct=c.created_at?new Date(c.created_at).getTime():0;
+      return{...c,diff:Math.abs(ct-spikeMs),ct};
+    }).sort((a,b)=>a.diff-b.diff);
+    // Accept clips created up to 90s AFTER spike (viewers need time to clip)
+    // Also accept clips up to 30s BEFORE the spike (pre-emptive clippers)
+    const spikeMs2=h.spikeEpoch||Date.now();
+    const withinWindow=withDiff.filter(c=>{
+      // Accept: clip created within 90s AFTER spike OR 30s BEFORE spike
+      const delta=c.ct-spikeMs2; // positive = after spike
+      return delta>=-30000&&delta<=CLIP_ACCEPT_WINDOW_MS;
+    }).sort((a,b)=>a.diff-b.diff);
+    if(!withinWindow.length){
+      if(onMiss)onMiss();
+      return;
+    }
+    // Pick best clip not already used 2+ times
+    let best=null;
+    for(let i=0;i<withinWindow.length;i++){
+      const cid=withinWindow[i].id||withinWindow[i].clip_id||'';
+      const uses=clipUsageCount.get(cid)||0;
+      if(uses<2){best=withinWindow[i];break;}
+    }
+    if(!best)best=withinWindow[0];
+    const assignedId=best.id||best.clip_id||'';
+    if(assignedId)clipUsageCount.set(assignedId,(clipUsageCount.get(assignedId)||0)+1);
+    // Build proper shareable Kick clip URL: kick.com/{slug}/clips/{clip_id}
+    const clipId=best.id||best.clip_id||'';
+    const clipUrl=clipId?`https://kick.com/${currentSlug}/clips/${clipId}`:(best.clip_url||best.url||'');
+    const title=(best.title||'').slice(0,30)||(best.clip_title||'').slice(0,30)||'View clip';
+    // Populate merged clip-info cell
+    const ci=document.getElementById('ci'+id);
+    if(ci){
+      const clipperName=best.created_by?.username||best.clip_by||best.clipper?.username||best.user?.username||'';
+      ci.innerHTML=`<a class="clip-title-link" href="${clipUrl}" target="_blank" rel="noopener">${esc(title||'View Clip')}</a>`
+        +(clipperName?`<div class="clip-by">✂ ${esc(clipperName)}</div>`:'');
+    }
+    showToast('📎 Found clip: '+title);
+    if(onFound)onFound();
+    // ── Use clip thumbnail to replace the stream frame capture ──────────────
+    // The clip object has a thumbnail field (string URL or object with src/url)
+    const rawThumb=best.thumbnail||best.clip_thumbnail||null;
+    let clipThumbUrl=null;
+    if(typeof rawThumb==='string'&&rawThumb.startsWith('http'))clipThumbUrl=rawThumb;
+    else if(rawThumb?.src)clipThumbUrl=rawThumb.src;
+    else if(rawThumb?.url)clipThumbUrl=rawThumb.url;
+    if(clipThumbUrl){
+      // Fetch via proxy and replace the row frame — clip thumb is better than stream thumb
+      fetchProxyImage(clipThumbUrl).then(dataUrl=>{
+        if(dataUrl){h.frameUrl=dataUrl;updateRowFrame(id,dataUrl)}
+      }).catch(()=>{});
+    }
+    // Also store all nearby clips (within 3 min)
+    const nearby=withDiff.filter(c=>c.diff<180000);
+    if(nearby.length>1)updateRowClips(id,nearby);
+  }catch(e){
+    const ciErr=document.getElementById('ci'+id);
+    if(ciErr)ciErr.innerHTML='<span class="clip-none" style="cursor:pointer" onclick="findClips('+id+',highlights.find(x=>x.id==='+id+'))">❌ Retry</span>';
+    console.warn('Clip finder error:',e);
+    if(onMiss)onMiss();
+  }
+}
+function updateRowClips(id,clips){
+  // Show a small count badge if multiple clips found
+  const btn=document.getElementById('cb'+id);if(!btn)return;
+  if(clips.length>1)btn.title=`${clips.length} clips found near this spike`;
+}
+function manualFindClips(id){
+  const h=highlights.find(x=>x.id===id);if(!h){showToast('Spike not found');return}
+  startClipCountdown(id,h);
+}
+
+// ── CONNECT ────────────────────────────────────────────────────────────────
+function toggleConnect(){connected?disconnect():connect()}
+async function connect(){
+  const slug=document.getElementById('slug').value.trim().toLowerCase();
+  if(!slug){showToast('Enter a channel name');return}
+  setStatus('connecting','LOOKING UP...');
+  const btn=document.getElementById('conn-btn');btn.textContent='LOOKING UP...';btn.disabled=true;
+  const info=await getChannelInfo(slug);
+  if(!info||!info.chatroomId){setStatus('error','FAILED');showToast('❌ Not found or not live: '+slug);btn.textContent='CONNECT';btn.disabled=false;return}
+  const{chatroomId,startTime,viewers,thumbnailUrl,livestreamId}=info;
+  streamStartEpoch=startTime?new Date(startTime).getTime():null;
+  connectEpoch=Date.now();sessionStartEpoch=Date.now();
+  viewerCount=viewers;prevViewerCount=viewers;
+  currentSlug=slug;currentThumbnailUrl=thumbnailUrl||'';currentLivestreamId=livestreamId;
+  setEl('hdr-stream-title',info.streamTitle||'');
+  setEl('hdr-stream-cat',info.category||'');
+  document.getElementById('hdr-viewers').textContent=viewers.toLocaleString();
+  document.getElementById('hdr-streamer').textContent=slug;
+  clearInterval(viewerPollTimer);viewerPollTimer=setInterval(()=>pollViewers(slug),60000);
+  setStatus('connecting','CONNECTING...');btn.textContent='CONNECTING...';
+  keyIdx=0;tryWS(chatroomId,btn);
+}
+function tryWS(roomId,btn){
+  if(keyIdx>=KEYS.length){setStatus('error','FAILED');btn.textContent='CONNECT';btn.disabled=false;showToast('❌ WebSocket failed');return}
+  const url=`wss://ws-us2.pusher.com/app/${KEYS[keyIdx]}?protocol=7&client=js&version=8.3.0&flash=false`;
+  if(ws){try{ws.close()}catch{}}ws=new WebSocket(url);
+  const to=setTimeout(()=>{if(!connected){ws.close();keyIdx++;tryWS(roomId,btn)}},7000);
+  ws.onopen=()=>ws.send(JSON.stringify({event:'pusher:subscribe',data:{auth:'',channel:`chatrooms.${roomId}.v2`}}));
+  ws.onmessage=raw=>{
+    let m;try{m=JSON.parse(raw.data)}catch{return}
+    if(m.event==='pusher:connection_established'){clearTimeout(to);connected=true;setStatus('live','LIVE');btn.textContent='DISCONNECT';btn.disabled=false;showToast('✅ Connected to '+document.getElementById('slug').value);pingTimer=setInterval(()=>{if(ws?.readyState===1)ws.send(JSON.stringify({event:'pusher:ping',data:{}}))},30000);return}
+    if(m.event==='App\\Events\\ChatMessageEvent'||m.event==='App\\Events\\ChatMessageSentEvent'){
+      try{
+          const d=typeof m.data==='string'?JSON.parse(m.data):m.data;
+          // Kick sends content directly on data for ChatMessageEvent
+          // and under message.content for ChatMessageSentEvent
+          const content=d.content||d.message?.content||d.message?.message||'';
+          const sender=d.sender||d.user||{};
+          if(content)onMsg(content,sender);
+        }catch(err){console.warn('msg parse error',err,m.data)}
+    }
+  };
+  ws.onerror=()=>{clearTimeout(to);if(!connected){keyIdx++;tryWS(roomId,btn)}};
+  ws.onclose=()=>{
+    clearTimeout(to);clearInterval(pingTimer);
+    if(connected){
+      connected=false;setStatus('off','OFFLINE');btn.textContent='CONNECT';btn.disabled=false;
+      showDisconnectAlert();
+    }
+  };
+}
+function disconnect(){
+  clearInterval(pingTimer);clearInterval(viewerPollTimer);try{ws?.close()}catch{}ws=null;connected=false;
+  streamStartEpoch=null;connectEpoch=null;currentSlug='';currentThumbnailUrl='';currentLivestreamId=null;
+  setEl('hdr-dur','—');setEl('hdr-viewers','—');setEl('hdr-streamer','—');setEl('hdr-mon-dur','');setEl('hdr-stream-title','');setEl('hdr-stream-cat','');
+  setStatus('off','OFFLINE');const btn=document.getElementById('conn-btn');btn.textContent='CONNECT';btn.disabled=false;
+  saveSession();
+}
+
+// ── MESSAGES ───────────────────────────────────────────────────────────────
+function onMsg(content,sender){
+  const user=sender?.username||'';
+  if(!user)return;
+
+  // Verified partner detection: check identity.badges for type "verified" or "partner"
+  // Also check sender-level flags
+  const badges=sender?.identity?.badges||sender?.badges||[];
+  const isVerified=badges.some(b=>b.type==='verified'||b.type==='partner'||b.type==='staff')||sender?.verified===true||sender?.is_verified===true;
+
+  totalMsgCount++;
+  document.getElementById('total-msgs').textContent=totalMsgCount;
+  chatterWindow.push({user,ts:Date.now()});
+  addChat(user,content,testKekw(content));
+  // Word cloud — filter emotes and emojis
+  updateWordCloud(content);
+
+  // Spammer (5+ word messages)
+  // Spammer detector: skip emote-leading messages, require 5+ words
+  const trimmed=content.trim();
+  const words=trimmed.split(/\s+/).filter(Boolean);
+  if(words.length>5&&!trimmed.startsWith('[emote')){
+    if(!spamTracker[user])spamTracker[user]={};
+    spamTracker[user][trimmed]=(spamTracker[user][trimmed]||0)+1;
+    if(spamTracker[user][trimmed]>=3)renderSpamDetector(user,trimmed,spamTracker[user][trimmed]);
+  }
+
+  // Verified streamers — exclude known bots
+  const BOT_EXCLUSIONS=new Set(['kickbot','botrix','nightbot','streamelements','fossabot','moobot','wizebot','coebot','deepbot','phantombot']);
+  if(isVerified&&!BOT_EXCLUSIONS.has(user.toLowerCase())){
+    if(!verifiedStreamers[user])verifiedStreamers[user]=0;
+    verifiedStreamers[user]++;
+    renderVerifiedStreamers();
+  }
+
+  // F detector — message is exactly "f" (case insensitive), or only "f" chars/whitespace
+  if(/^\s*[Ff]\s*$/.test(content)){onFEvent()}
+
+  // Muted detector
+  if(/muted/i.test(content)&&!/\[emote/.test(content)){onMutedEvent()}
+
+  // CX detector — standalone CX from 10+ distinct users in window
+  if(/(?:^|[^A-Za-z0-9])(?:[Cc][Xx])(?:[^A-Za-z0-9]|$)/.test(content)&&!/\[emote/.test(content)){onCxMsg(user)}
+
+  // KickSupport
+  if(user.toLowerCase()==='kicksupport'){
+    ksSeen++;document.getElementById('ks-cnt').textContent=ksSeen;
+    document.getElementById('ks-body').querySelector('.ks-empty')?.remove();
+    const row=document.createElement('div');row.className='ks-row';
+    row.innerHTML=`<div class="ks-meta"><span>${getVodTs()}</span><span>${new Date().toLocaleTimeString()}</span><span>${viewerCount.toLocaleString()} viewers</span></div><div class="ks-msg">${esc(content)}</div>`;
+    document.getElementById('ks-body').insertBefore(row,document.getElementById('ks-body').firstChild);
+    ksSound();showToast('🔴 KickSupport: '+content.slice(0,60),'ks');
+  }
+
+  // Pocket Watchin
+  if(user.toLowerCase()==='kickbot'||user.toLowerCase()==='kick'){parsePocketWatchin(content)}
+
+  // KEKW
+  if(testKekw(content)){
+    const count=countKekw(content)||1, now=Date.now();
+    kekwMsgTs.push(now);
+    if(!windowKekwMap[user])windowKekwMap[user]=[];
+    for(let i=0;i<count;i++)windowKekwMap[user].push(now);
+    pruneWindowMap(nv('window')*1000);
+    addToOverallLb(user,count);
+    totalKekws+=count;
+    setEl('s-total',totalKekws);
+    setEl('hdr-kekws',totalKekws);
+    const inWin=kekwMsgTs.filter(t=>t>=now-nv('window')*1000).length;
+    const wcEl=document.getElementById('kekw-window-cnt');if(wcEl)wcEl.textContent='window: '+inWin+'/'+(nv('threshold')||10);
+  }
+}
+
+// ── F DETECTOR ────────────────────────────────────────────────────────────
+function onFEvent(){
+  const now=Date.now();
+  if(fCurrent&&now-fLastTs<EVENT_GAP_MS){
+    fCurrent.count++;fLastTs=now;fCurrent.endVod=getVodTs();fCurrent.endWall=new Date().toLocaleTimeString();renderFEvents();
+  }else{
+    if(fCurrent){fCurrent.active=false}
+    fCurrent={startVod:getVodTs(),startWall:new Date().toLocaleTimeString(),endVod:getVodTs(),endWall:new Date().toLocaleTimeString(),count:1,active:true};
+    fEvents.unshift(fCurrent);fLastTs=now;
+    document.getElementById('f-cnt').textContent=fEvents.length;
+    document.getElementById('f-body').querySelector('.ev-empty')?.remove();
+    renderFEvents();
+  }
+}
+function onMutedEvent(){
+  const now=Date.now();
+  if(mutedCurrent&&now-mutedLastTs<EVENT_GAP_MS){
+    mutedCurrent.count++;mutedLastTs=now;mutedCurrent.endVod=getVodTs();mutedCurrent.endWall=new Date().toLocaleTimeString();renderMutedEvents();
+  }else{
+    if(mutedCurrent){mutedCurrent.active=false}
+    mutedCurrent={startVod:getVodTs(),startWall:new Date().toLocaleTimeString(),endVod:getVodTs(),endWall:new Date().toLocaleTimeString(),count:1,active:true};
+    mutedEvents.unshift(mutedCurrent);mutedLastTs=now;
+    document.getElementById('muted-cnt').textContent=mutedEvents.length;
+    document.getElementById('muted-body').querySelector('.ev-empty')?.remove();
+    renderMutedEvents();
+  }
+}
+function checkEventGaps(){
+  const now=Date.now();
+  if(fCurrent&&fCurrent.active&&now-fLastTs>=EVENT_GAP_MS){fCurrent.active=false;renderFEvents()}
+  if(mutedCurrent&&mutedCurrent.active&&now-mutedLastTs>=EVENT_GAP_MS){mutedCurrent.active=false;renderMutedEvents()}
+  if(cxCurrent&&cxCurrent.active&&now-cxLastTs>=EVENT_GAP_MS){cxCurrent.active=false;renderCxEvents()}
+}
+function renderFEvents(){
+  const body=document.getElementById('f-body');
+  body.innerHTML=fEvents.slice(0,20).map(ev=>`
+    <div class="ev-event">
+      <div class="ev-event-hdr">
+        <span class="ev-event-label f-label${ev.active?' ev-active':''}">${ev.active?'● ACTIVE':'🅵 Event'}</span>
+        <span class="ev-event-cnt">${ev.count}×</span>
+      </div>
+      <div class="ev-event-times">Start: ${ev.startVod} (${ev.startWall}) → End: ${ev.endVod} (${ev.endWall})</div>
+    </div>`).join('');
+}
+function renderMutedEvents(){
+  const body=document.getElementById('muted-body');
+  body.innerHTML=mutedEvents.slice(0,20).map(ev=>`
+    <div class="ev-event">
+      <div class="ev-event-hdr">
+        <span class="ev-event-label mut-label${ev.active?' ev-active':''}">${ev.active?'● ACTIVE':'🔇 Event'}</span>
+        <span class="ev-event-cnt">${ev.count}×</span>
+      </div>
+      <div class="ev-event-times">Start: ${ev.startVod} (${ev.startWall}) → End: ${ev.endVod} (${ev.endWall})</div>
+    </div>`).join('');
+}
+
+function onCxMsg(user){
+  const now=Date.now();
+  // Reset user window if gap exceeded
+  if(cxLastTs&&now-cxLastTs>EVENT_GAP_MS){
+    cxWindowUsers.clear();
+    if(cxCurrent){cxCurrent.active=false;renderCxEvents()}
+    cxCurrent=null;
+  }
+  cxWindowUsers.add(user);
+  cxLastTs=now;
+  const uniqCount=cxWindowUsers.size;
+  // Update pending event count display even before threshold
+  if(cxCurrent&&cxCurrent.active){
+    cxCurrent.count++;cxCurrent.uniqUsers=uniqCount;
+    cxCurrent.endVod=getVodTs();cxCurrent.endWall=new Date().toLocaleTimeString();
+    renderCxEvents();
+  }
+  // Threshold: fire when 10+ distinct users have CX'd
+  if(uniqCount>=CX_USER_THRESHOLD){
+    if(!cxCurrent||!cxCurrent.active){
+      cxCurrent={startVod:getVodTs(),startWall:new Date().toLocaleTimeString(),endVod:getVodTs(),endWall:new Date().toLocaleTimeString(),count:cxWindowUsers.size,uniqUsers:uniqCount,active:true};
+      cxEvents.unshift(cxCurrent);
+      document.getElementById('cx-cnt').textContent=cxEvents.length;
+      document.getElementById('cx-body').querySelector('.ev-empty')?.remove();
+      showToast('CX wave detected! '+uniqCount+' users');
+    }
+    renderCxEvents();
+  }
+}
+function renderCxEvents(){
+  const body=document.getElementById('cx-body');
+  // Show pending count if building toward threshold
+  const pending=cxWindowUsers.size;
+  const pendingHtml=(pending>0&&pending<CX_USER_THRESHOLD)?
+    `<div style="font-size:0.58rem;color:var(--muted);padding:4px 10px">${pending}/${CX_USER_THRESHOLD} unique users — waiting for threshold…</div>`:'';
+  body.innerHTML=pendingHtml+cxEvents.slice(0,20).map(ev=>`
+    <div class="ev-event">
+      <div class="ev-event-hdr">
+        <span class="ev-event-label" style="color:var(--purple-light)${ev.active?';animation:blink 1s infinite':''}">${ev.active?'● ACTIVE':'CX Event'}</span>
+        <span class="ev-event-cnt">${ev.count}×</span>
+      </div>
+      <div class="ev-event-times">Start: ${ev.startVod} (${ev.startWall}) → End: ${ev.endVod} (${ev.endWall})</div>
+    </div>`).join('');
+}
+
+// ── WORD CLOUD ─────────────────────────────────────────────────────────────
+const STOPWORDS=new Set(['the','a','an','and','or','but','in','on','at','to','for','of','is','it','i','you','he','she','we','they','this','that','was','are','be','been','with','from','by','as','so','if','my','your','his','her','our','me','us','im','its','ive','lol','lmao','yes','no','ok','yeah','just','like','not','do','get','go','got','can','will','still','even','what','how','have','has','had','all','up']);
+let wcTimer=null;
+function updateWordCloud(content){
+  // Remove emote tags [emote:...:...] before processing
+  const clean=content
+    .replace(/\[emote:[^\]]+\]/gi,'')  // strip emote tags
+    .replace(/:[a-zA-Z0-9_]+:/g,'')       // strip :emoji_name: style
+    .replace(/[^\p{L}\p{N}\s]/gu,'')   // strip non-letter/number (removes actual emoji chars)
+    .toLowerCase();
+  clean.split(/\s+/).forEach(w=>{if(w.length>3&&!STOPWORDS.has(w)&&!/^emote/.test(w))wordFreq[w]=(wordFreq[w]||0)+1});
+  clearTimeout(wcTimer);wcTimer=setTimeout(renderWordCloud,2000);
+}
+function renderWordCloud(){
+  const sorted=Object.entries(wordFreq).sort((a,b)=>b[1]-a[1]).slice(0,50);if(!sorted.length)return;
+  const maxF=sorted[0][1];
+  const wcEl=document.getElementById('word-cloud-sb')||document.getElementById('word-cloud');if(wcEl)wcEl.innerHTML=sorted.map(([w,f])=>{const sz=Math.round(7+((f/maxF)*9)),a=0.45+(f/maxF)*0.55;return`<div class="wc-word" style="font-size:${sz}px;opacity:${a}">${esc(w)} <span style="color:var(--purple);font-size:${sz-2}px">${f}</span></div>`}).join('');
+}
+
+// ── SPAMMER DETECTOR ──────────────────────────────────────────────────────
+function renderSpamDetector(user,msg,count){
+  const body=document.getElementById('spam-body');body.querySelector('.spam-empty')?.remove();
+  const key='spam-'+user;const existing=body.querySelector(`[data-key="${key}"]`);
+  if(existing){existing.querySelector('.spam-cnt').textContent=count+'×';return}
+  const row=document.createElement('div');row.className='spam-row';row.dataset.key=key;
+  row.innerHTML=`<span class="spam-user">${esc(user)}</span><span class="spam-msg">${esc(msg)}</span><span class="spam-cnt">${count}×</span>`;
+  body.insertBefore(row,body.firstChild);
+}
+
+// ── VERIFIED STREAMERS ────────────────────────────────────────────────────
+function renderVerifiedStreamers(){
+  const body=document.getElementById('vs-body');body.querySelector('.vs-empty')?.remove();
+  const sorted=Object.entries(verifiedStreamers).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('vs-cnt').textContent=sorted.length;
+  body.innerHTML=sorted.map(([name,msgs])=>`<div class="vs-row"><span class="vs-badge">✓ Partner</span><span class="vs-name">${esc(name)}</span><span class="vs-cnt">${msgs} msg</span></div>`).join('');
+}
+
+// ── POCKET WATCHIN ────────────────────────────────────────────────────────
+function parsePocketWatchin(content){
+  const tipM=content.match(/(\w+)\s+just tipped\s+\$?([\d,]+(?:\.\d{2})?)/i);
+  if(tipM){tipsMap[tipM[1]]=(tipsMap[tipM[1]]||0)+parseFloat(tipM[2].replace(',',''));renderPocketWatchin();return}
+  const giftM=content.match(/(\w+)\s+just gifted\s+(\d+)\s+sub/i);
+  if(giftM){giftsMap[giftM[1]]=(giftsMap[giftM[1]]||0)+parseInt(giftM[2]);renderPocketWatchin()}
+}
+function updateKPP(){
+  if(!connected||!sessionStartEpoch)return;
+  const now=Date.now();
+  // Sample viewer count every 30s
+  if(!kppViewerSamples.length||now-kppViewerSamples[kppViewerSamples.length-1].ts>30000){
+    kppViewerSamples.push({ts:now,v:viewerCount});
+  }
+  // Keep only last 60 minutes of samples
+  const cutoff=now-3600000;
+  while(kppViewerSamples.length&&kppViewerSamples[0].ts<cutoff)kppViewerSamples.shift();
+  if(!kppViewerSamples.length)return;
+  // Average viewer count across all samples
+  const avgViewers=Math.round(kppViewerSamples.reduce((a,s)=>a+s.v,0)/kppViewerSamples.length);
+  // KPP formula: $10 per 100 viewers per hour
+  const kppHr=(avgViewers/100)*10;
+  kppLastHrEstimate=kppHr;
+  // Session duration in hours
+  const sessionHrs=(now-sessionStartEpoch)/3600000;
+  const kppTotal=kppHr*sessionHrs;
+  const el=document.getElementById('kpp-display');
+  if(el)el.innerHTML=`
+    <div style="padding:4px 0;display:flex;flex-direction:column;gap:3px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.58rem;color:var(--muted)">Avg Viewers</span>
+        <span style="font-family:var(--disp);font-size:0.9rem;color:var(--green)">${avgViewers.toLocaleString()}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.58rem;color:var(--muted)">KPP /hr</span>
+        <span style="font-family:var(--disp);font-size:0.9rem;color:var(--gold)">$${kppHr.toFixed(2)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:0.58rem;color:var(--muted)">KPP Est. Total</span>
+        <span style="font-family:var(--disp);font-size:0.9rem;color:var(--gold)">$${kppTotal.toFixed(2)}</span>
+      </div>
+    </div>`;
+}
+
+function renderPocketWatchin(){
+  const med=['gold','silver','bronze'];
+  const tips=Object.entries(tipsMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const gifts=Object.entries(giftsMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const totalTips=Object.values(tipsMap).reduce((a,b)=>a+b,0);
+  const totalGifts=Object.values(giftsMap).reduce((a,b)=>a+b,0);
+  document.getElementById('tips-lb').innerHTML=(tips.length?
+    `<div style="font-size:0.9rem;color:var(--green);padding:3px 0 5px;font-family:var(--disp);letter-spacing:1px">TOTAL: $${totalTips.toFixed(2)}</div>`+
+    tips.map(([n,v],i)=>`<div class="pw-row"><div class="pw-rank ${med[i]||''}">${i+1}</div><div class="pw-name">${esc(n)}</div><div class="pw-val">$${v.toFixed(2)}</div></div>`).join('')
+    :'<div class="pw-empty">No tips yet</div>');
+  document.getElementById('gifts-lb').innerHTML=(gifts.length?
+    `<div style="font-size:0.9rem;color:var(--green);padding:3px 0 5px;font-family:var(--disp);letter-spacing:1px">TOTAL: ${totalGifts} subs</div>`+
+    gifts.map(([n,v],i)=>`<div class="pw-row"><div class="pw-rank ${med[i]||''}">${i+1}</div><div class="pw-name">${esc(n)}</div><div class="pw-val">${v} subs</div></div>`).join('')
+    :'<div class="pw-empty">No gifted subs yet</div>');
+}
+
+// ── CHAT ───────────────────────────────────────────────────────────────────
+function addChat(user,content,isKekw){
+  chatCount++;document.getElementById('chat-cnt').textContent=chatCount;document.getElementById('chat-empty')?.remove();
+  const feed=document.getElementById('chat-feed');const atBottom=feed.scrollHeight-feed.scrollTop-feed.clientHeight<80;
+  const el=document.createElement('div');el.className='msg'+(isKekw?' kekw':'');
+  const hue=[...user].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
+  el.innerHTML=`<div class="msg-user" style="color:hsl(${hue},65%,68%)">${esc(user)}</div><div class="msg-text">${hlKekw(esc(content))}</div>`;
+  feed.appendChild(el);while(feed.children.length>MAX_CHAT)feed.removeChild(feed.firstChild);
+  if(atBottom)feed.scrollTop=feed.scrollHeight;else document.getElementById('scroll-btn').style.display='block';
+}
+function scrollChatBottom(){const feed=document.getElementById('chat-feed');feed.scrollTop=feed.scrollHeight;document.getElementById('scroll-btn').style.display='none'}
+document.getElementById('chat-feed').addEventListener('scroll',function(){if(this.scrollHeight-this.scrollTop-this.clientHeight<40)document.getElementById('scroll-btn').style.display='none'});
+
+// ── FAVOURITES ─────────────────────────────────────────────────────────────
+function getFavs(){try{return JSON.parse(localStorage.getItem('kekwclips_favs')||'[]');}catch{return[]}}
+function saveFavs(f){localStorage.setItem('kekwclips_favs',JSON.stringify(f))}
+function renderFavs(){
+  const favs=getFavs(),el=document.getElementById('fav-bubbles');
+  el.innerHTML=favs.length?favs.map((slug,i)=>`<div class="fav-bubble" onclick="loadFav('${esc(slug)}')"><span class="fav-bubble-name">${esc(slug)}</span><button class="fav-bubble-del" onclick="delFav(event,'${esc(slug)}')" title="Remove">★</button></div>`).join(''): '';
+  updateStar();
+}
+function loadFav(slug){document.getElementById('slug').value=slug;updateStar();showToast('Loaded: '+slug)}
+function delFav(e,slug){e.stopPropagation();const f=getFavs().filter(s=>s!==slug);saveFavs(f);renderFavs()}
+function updateStar(){const slug=document.getElementById('slug').value.trim().toLowerCase();const saved=getFavs().includes(slug);const btn=document.getElementById('star-btn');btn.textContent=saved?'★':'☆';btn.style.color=saved?'var(--gold)':''}
+function quickSaveFav(){const slug=document.getElementById('slug').value.trim().toLowerCase();if(!slug){showToast('Enter a channel name');return}const favs=getFavs();if(favs.includes(slug)){const f=favs.filter(s=>s!==slug);saveFavs(f);renderFavs();showToast('Removed: '+slug)}else{favs.unshift(slug);saveFavs(favs);renderFavs();showToast('★ Saved: '+slug)}}
+
+// ── PANEL COLLAPSE ────────────────────────────────────────────────────────
+function togglePanel(id){document.getElementById(id).classList.toggle('collapsed')}
+function toggleCfg(id){document.getElementById(id).classList.toggle('collapsed')}
+function applySpike(){
+  const thr=nv('threshold'),win=nv('window'),cool=nv('cooldown');
+  if(thr<1||win<1||cool<5){showToast('⚠️ Invalid spike settings');return}
+  // Clear existing kekwMsgTs to apply new window immediately
+  const now=Date.now();
+  kekwMsgTs=kekwMsgTs.filter(t=>t>=now-win*1000);
+  const status=document.getElementById('spike-status');
+  status.textContent='✓ Applied: '+thr+' KEKWs / '+win+'s window / '+cool+'s cooldown';
+  status.style.color='var(--green)';
+  setTimeout(()=>{status.textContent='';status.style.color='var(--muted)'},3000);
+  showToast('⚡ Spike settings updated');
+}
+
+// ── SESSION PERSISTENCE ───────────────────────────────────────────────────
+function saveSessionSnapshot(spike){
+  try{
+    const sessions=JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]');
+    let session=sessions.find(s=>s.id===sessionStartEpoch);
+    if(!session){session={id:sessionStartEpoch,slug:currentSlug,start:new Date(sessionStartEpoch).toISOString(),connectWall:new Date().toLocaleString(),spikes:[],kekwTotal:0,record:0,peakViewers:viewerCount}}
+    session.spikes.push({vod:spike.vod,count:spike.count,viewers:spike.viewers,deltaViewers:spike.deltaViewers,wall:spike.wallDate+' '+spike.wallTime,isRecord:spike.isRecord,spikeEpoch:spike.spikeEpoch});
+    session.kekwTotal=totalKekws;session.record=allTimeRecord;session.lastUpdate=new Date().toISOString();
+    session.peakViewers=Math.max(session.peakViewers||0,viewerCount);
+    session.streamTitle=document.getElementById('hdr-stream-title')?.textContent||'';
+    session.category=document.getElementById('hdr-stream-cat')?.textContent||'';
+    session.totalTips=Object.values(tipsMap).reduce((a,b)=>a+b,0);
+    session.totalGifts=Object.values(giftsMap).reduce((a,b)=>a+b,0);
+    session.kppEst=kppLastHrEstimate;
+    const idx=sessions.findIndex(s=>s.id===sessionStartEpoch);
+    if(idx>=0)sessions[idx]=session;else sessions.unshift(session);
+    localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions.slice(0,100)));
+  }catch(e){console.warn('saveSessionSnapshot',e)}
+}
+function saveSession(){
+  try{
+    const sessions=JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]');
+    const session=sessions.find(s=>s.id===sessionStartEpoch);
+    if(session){
+      session.end=new Date().toISOString();
+      session.disconnectWall=new Date().toLocaleString();
+      session.kekwTotal=totalKekws;session.record=allTimeRecord;
+      session.peakViewers=Math.max(session.peakViewers||0,viewerCount);
+      session.totalSpikes=spikes;
+      session.streamTitle=document.getElementById('hdr-stream-title')?.textContent||session.streamTitle||'';
+      session.category=document.getElementById('hdr-stream-cat')?.textContent||session.category||'';
+      session.totalTips=Object.values(tipsMap).reduce((a,b)=>a+b,0);
+      session.totalGifts=Object.values(giftsMap).reduce((a,b)=>a+b,0);
+      session.kppEst=kppLastHrEstimate;
+      localStorage.setItem(SESSIONS_KEY,JSON.stringify(sessions));
+    }
+  }catch(e){}
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────
+function clearAll(){
+  highlights=[];spikes=0;chatCount=0;totalMsgCount=0;
+  setEl('s-spikes','0');document.getElementById('log-cnt').textContent='0 MOMENTS';
+  document.getElementById('chat-cnt').textContent='0';document.getElementById('total-msgs').textContent='0';
+  document.getElementById('log-body').innerHTML='<div class="empty"><img src="data:image/jpeg;base64,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" style="width:40px;height:40px;border-radius:4px;opacity:.35;margin-bottom:4px"><span>No spikes yet — connect to start</span></div>';
+  document.getElementById('chat-feed').innerHTML='<div class="empty" id="chat-empty"><div class="empty-ico">💬</div><span>Connect to see chat</span></div>';
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function setStatus(s,t){document.getElementById('dot').className='dot'+(s==='live'?' live':s==='error'?' error':'');document.getElementById('status-text').textContent=t;document.getElementById('status-text').style.color=s==='live'?'var(--green)':s==='error'?'var(--red)':'var(--muted)'}
+let toastTimer=null;
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';if(type==='record')t.classList.add('record');else if(type==='ks')t.classList.add('ks-alert');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4500)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function nv(id){return parseInt(document.getElementById(id).value)||0}
+function showDisconnectAlert(){
+  // Distinct disconnect sound (descending tones)
+  if(soundEnabled){
+    try{
+      const ac=getAC();
+      [440,330,220].forEach((f,i)=>setTimeout(()=>tone(f,.25,'sine',.2),i*180));
+    }catch{}
+  }
+  const slug=currentSlug||document.getElementById('slug').value;
+  document.getElementById('disc-slug').textContent=slug;
+  document.getElementById('disc-overlay').style.display='flex';
+  retryCount=0;retryEnabled=true;
+  scheduleRetry();
+}
+function scheduleRetry(){
+  if(!retryEnabled)return;
+  retryCount++;
+  const delay=Math.min(5+retryCount*5,60); // 10s, 15s, 20s... up to 60s
+  document.getElementById('disc-retry-msg').textContent='Auto-reconnect attempt '+retryCount+' in '+delay+'s…';
+  clearTimeout(autoRetryTimer);
+  autoRetryTimer=setTimeout(()=>{
+    if(!retryEnabled||connected)return;
+    document.getElementById('disc-retry-msg').textContent='Attempting reconnect #'+retryCount+'…';
+    connect().then(()=>{
+      if(connected){dismissDisc();}
+      else{scheduleRetry();}
+    }).catch(()=>scheduleRetry());
+  },delay*1000);
+}
+function retryNow(){clearTimeout(autoRetryTimer);connect().then(()=>{if(connected)dismissDisc();else scheduleRetry()}).catch(()=>scheduleRetry())}
+function dismissDisc(){retryEnabled=false;clearTimeout(autoRetryTimer);document.getElementById('disc-overlay').style.display='none'}
+
+function showOAuthHelp(){document.getElementById('oauth-overlay').classList.add('open')}
+function closeOAuthHelp(){document.getElementById('oauth-overlay').classList.remove('open')}
+
+// ── STATS SCREENSHOT ─────────────────────────────────────────────────────
+function captureStats(){
+  // Build a 5:7 canvas with header stats
+  const W=500,H=980;
+  const canvas=document.createElement('canvas');
+  canvas.width=W;canvas.height=H;
+  const c=canvas.getContext('2d');
+  // Background
+  c.fillStyle='#0a0a0b';c.fillRect(0,0,W,H);
+  // Border
+  c.strokeStyle='#2a2a34';c.lineWidth=1;c.strokeRect(1,1,W-2,H-2);
+  // Title
+  c.font='bold 36px "Bebas Neue",monospace';c.fillStyle='#53fc18';c.textAlign='center';
+  c.fillText('KEKWCLIPS',W/2,60);
+  c.font='14px monospace';c.fillStyle='#8888a0';
+  c.fillText('v0.23 — Kick Highlight Monitor',W/2,82);
+  // Streamer
+  const slug=(document.getElementById('hdr-streamer')?.textContent||'—').toUpperCase();
+  c.font='bold 28px "Bebas Neue",monospace';c.fillStyle='#f0f0f0';
+  c.fillText(slug,W/2,120);
+  // Stream title
+  const title=document.getElementById('hdr-stream-title')?.textContent||'';
+  if(title&&title!=='—'){
+    c.font='12px monospace';c.fillStyle='#d0d0e0';
+    c.fillText(title.slice(0,50),W/2,142);
+  }
+  // Category
+  const cat=document.getElementById('hdr-stream-cat')?.textContent||'';
+  if(cat&&cat!=='—'){
+    c.font='13px monospace';c.fillStyle='#fbbf24';c.fillText(cat,W/2,160);
+  }
+  // Monitoring duration — prominent, above stats
+  const monDurLabel=sessionStartEpoch?fmtDur(Date.now()-sessionStartEpoch):'—';
+  c.font='11px monospace';c.fillStyle='#8888a0';c.textAlign='center';
+  c.fillText('Stats based on monitored duration of:',W/2,178);
+  c.font='bold 18px "Bebas Neue",monospace';c.fillStyle='#c084fc';
+  c.fillText(monDurLabel,W/2,196);
+  // Divider
+  c.strokeStyle='#2a2a34';c.beginPath();c.moveTo(40,204);c.lineTo(W-40,204);c.stroke();
+  // ── KEKW Bar Graph overview ──────────────────────────────────────────────
+  // Draw a mini version of the full session bar data above the stats grid
+  const bgTop=gridTop-90;
+  const bgH=70;
+  c.fillStyle='#111116';c.fillRect(10,bgTop,W-20,bgH+10);
+  c.strokeStyle='#2a2a34';c.strokeRect(10,bgTop,W-20,bgH+10);
+  c.font='8px monospace';c.fillStyle='#8888a0';c.textAlign='left';
+  c.fillText('KEKW RATE — FULL SESSION',16,bgTop+10);
+  if(bars&&bars.length){
+    const bMax=Math.max(...bars,1);
+    const bw=(W-28)/bars.length;
+    bars.forEach((v,i)=>{
+      if(!v)return;
+      const bh=Math.round((v/bMax)*(bgH-14));
+      const alpha=0.3+(i/bars.length)*0.7;
+      c.fillStyle=`rgba(168,85,247,${(v/bMax)>.65?alpha:alpha*0.45})`;
+      c.fillRect(14+i*bw, bgTop+bgH-bh-2, Math.max(1,bw-1), bh);
+    });
+    // Spike markers — vertical green lines at spike positions
+    highlights.forEach(sp=>{
+      if(!sp.spikeEpoch||!sessionStartEpoch)return;
+      const sessionDur=Date.now()-sessionStartEpoch;
+      const frac=(sp.spikeEpoch-sessionStartEpoch)/sessionDur;
+      const sx=14+frac*(W-28);
+      c.strokeStyle='rgba(83,252,24,0.6)';c.lineWidth=1;
+      c.beginPath();c.moveTo(sx,bgTop+4);c.lineTo(sx,bgTop+bgH-2);c.stroke();
+    });
+  }
+
+  // Stats grid
+  const stats=[
+    ['STREAM DURATION', document.getElementById('hdr-dur')?.textContent||'—','#c084fc'],
+    ['VIEWERS',         document.getElementById('hdr-viewers')?.textContent||'—','#53fc18'],
+    ['TOTAL KEKWs',     document.getElementById('hdr-kekws')?.textContent||'0','#a855f7'],
+    ['SPIKES',          document.getElementById('hdr-spikes')?.textContent||'0','#53fc18'],
+    ['ALL TIME HIGH',   document.getElementById('hdr-ath')?.textContent||'0','#a855f7'],
+    ['UNIQ CHATTERS',   document.getElementById('hdr-uniq-chatters')?.textContent||'0','#c084fc'],
+  ];
+  const cols=2,rows=Math.ceil(stats.length/cols),cellW=W/cols,cellH=80;
+  const gridTop=320;
+  stats.forEach(([label,val,color],i)=>{
+    const col=i%cols,row=Math.floor(i/cols);
+    const x=col*cellW,y=gridTop+row*cellH;
+    // Cell bg
+    c.fillStyle='#1c1c22';c.fillRect(x+6,y+4,cellW-12,cellH-8);
+    c.strokeStyle='#2a2a34';c.strokeRect(x+6,y+4,cellW-12,cellH-8);
+    // Label
+    c.font='10px monospace';c.fillStyle='#8888a0';c.textAlign='center';
+    c.fillText(label,x+cellW/2,y+22);
+    // Value
+    c.font='bold 26px "Bebas Neue",monospace';c.fillStyle=color;
+    c.fillText(val,x+cellW/2,y+55);
+  });
+  // (Monitoring duration shown above stats — removed from here)
+  // Top 3 KEKW Leaderboard
+  const lbTop=gridTop+rows*cellH+38;
+  const sorted=Object.entries(overallKekwMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(sorted.length){
+    c.font='10px monospace';c.fillStyle='#8888a0';c.textAlign='center';
+    c.fillText('TOP KEKW CHATTERS',W/2,lbTop+2);
+    const medals=['#fbbf24','#94a3b8','#b45309'];
+    sorted.forEach(([name,cnt],i)=>{
+      const y=lbTop+20+i*22;
+      c.fillStyle='#1c1c22';c.fillRect(40,y-14,W-80,18);
+      c.strokeStyle='#2a2a34';c.strokeRect(40,y-14,W-80,18);
+      c.font='bold 11px monospace';c.fillStyle=medals[i];c.textAlign='left';
+      c.fillText((i+1)+'. '+name.slice(0,22),50,y);
+      c.font='bold 13px "Bebas Neue",monospace';c.fillStyle='#a855f7';c.textAlign='right';
+      c.fillText(cnt,W-50,y);
+    });
+  }
+  // ── Word Cloud — top 5 words ──────────────────────────────────────────
+  const wcTop=sorted.length?lbTop+20+sorted.length*22+18:lbTop+18;
+  const wcWords=Object.entries(wordFreq).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(wcWords.length){
+    // Section header
+    c.font='10px monospace';c.fillStyle='#8888a0';c.textAlign='center';
+    c.fillText('TOP CHAT WORDS',W/2,wcTop);
+    // Horizontal row of word bubbles
+    const totalW=wcWords.reduce((sum,[w])=>sum+Math.max(60,w.length*8+24),0);
+    const gap=8;const rowW=Math.min(totalW+(wcWords.length-1)*gap,W-40);
+    const maxF=wcWords[0][1]||1;
+    let bx=(W-rowW)/2;
+    wcWords.forEach(([word,freq])=>{
+      const bw=Math.max(60,word.length*8+24);
+      const alpha=0.45+(freq/maxF)*0.55;
+      // Bubble background — purple shading by frequency
+      const lightness=Math.round(28+(1-freq/maxF)*20);
+      c.fillStyle=`hsla(270,55%,${lightness}%,${alpha})`;
+      c.beginPath();c.roundRect(bx,wcTop+10,bw,28,5);c.fill();
+      c.strokeStyle=`hsla(270,65%,${lightness+15}%,0.6)`;c.lineWidth=1;
+      c.beginPath();c.roundRect(bx,wcTop+10,bw,28,5);c.stroke();
+      // Word text
+      c.font='bold 11px monospace';c.fillStyle='#e0d0ff';c.textAlign='center';
+      c.fillText(word,bx+bw/2,wcTop+22);
+      // Count
+      c.font='9px monospace';c.fillStyle='#a080d0';
+      c.fillText(freq,bx+bw/2,wcTop+33);
+      bx+=bw+gap;
+    });
+  }
+  const wcEndY=wcWords.length?wcTop+52:wcTop;
+  // Divider before footer
+  c.strokeStyle='#2a2a34';c.lineWidth=1;
+  c.beginPath();c.moveTo(30,wcEndY+8);c.lineTo(W-30,wcEndY+8);c.stroke();
+
+  // Timestamp footer
+  const yAfterLb=wcEndY+18;
+  const captureNow=new Date();
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+  const tzShort=captureNow.toLocaleTimeString([],{timeZoneName:'short'}).split(' ').pop()||tz;
+  const fmtDate=(d)=>d?d.toLocaleDateString([],{year:'numeric',month:'short',day:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—';
+  const startD=sessionStartEpoch?new Date(sessionStartEpoch):null;
+  const endD=new Date();
+  c.fillStyle='#111116';c.fillRect(0,H-68,W,68);
+  c.strokeStyle='#2a2a34';c.beginPath();c.moveTo(30,H-68);c.lineTo(W-30,H-68);c.stroke();
+  c.font='9px monospace';c.fillStyle='#666680';c.textAlign='center';
+  const shortDate=(d)=>d?d.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
+  c.fillText('Captured: '+shortDate(captureNow)+' '+tzShort,W/2,H-52);
+  c.fillText('Start: '+shortDate(startD)+'  →  End: '+shortDate(endD)+' '+tzShort,W/2,H-38);
+  c.font='8px monospace';c.fillStyle='#444455';
+  c.fillText('KEKWClips v0.23  ·  kick.com/'+slug.toLowerCase(),W/2,H-20);
+  // Download
+  const a=document.createElement('a');
+  a.download='kekwclips_'+(document.getElementById('slug')?.value||'stats')+'_'+Date.now()+'.png';
+  a.href=canvas.toDataURL('image/png');a.click();
+  showToast('📷 Stats saved as PNG');
+}
+
+// ── SESSIONS ─────────────────────────────────────────────────────────────
+function openSessions(){
+  const overlay=document.getElementById('sess-overlay');overlay.classList.add('open');
+  populateStreamerFilter();renderSessions();
+}
+function closeSessions(){document.getElementById('sess-overlay').classList.remove('open')}
+document.getElementById('sess-overlay')?.addEventListener('click',e=>{if(e.target===e.currentTarget)closeSessions()});
+
+function getSessions(){try{return JSON.parse(localStorage.getItem(SESSIONS_KEY)||'[]')}catch{return[]}}
+
+function populateStreamerFilter(){
+  const sel=document.getElementById('sess-filter');
+  const sessions=getSessions();
+  const slugs=[...new Set(sessions.map(s=>s.slug).filter(Boolean))].sort();
+  const current=sel.value;
+  sel.innerHTML='<option value="">All Streamers</option>'+slugs.map(s=>`<option value="${esc(s)}" ${s===current?'selected':''}>${esc(s)}</option>`).join('');
+}
+
+function renderSessions(){
+  const body=document.getElementById('sess-body');
+  let sessions=getSessions();
+  if(!sessions.length){body.innerHTML='<div class="sess-empty">No sessions recorded yet.<br>Connect to a channel and monitor to start building history.</div>';return}
+  const filterSlug=document.getElementById('sess-filter').value;
+  if(filterSlug)sessions=sessions.filter(s=>s.slug===filterSlug);
+  if(!sessions.length){body.innerHTML='<div class="sess-empty">No sessions for this streamer yet.</div>';return}
+
+  // Group by streamer
+  const bySlug={};
+  sessions.forEach(s=>{const k=s.slug||'unknown';if(!bySlug[k])bySlug[k]=[];bySlug[k].push(s)});
+
+  // Find global max record for comparison bars
+  const globalMax=Math.max(...sessions.map(s=>s.record||0),1);
+
+  let html='';
+  for(const[slug,sessList] of Object.entries(bySlug)){
+    html+=`<div class="sess-streamer-hdr">${esc(slug)} <span style="font-size:0.6rem;color:var(--muted);font-family:var(--mono)">(${sessList.length} session${sessList.length!==1?'s':''})</span></div>`;
+    html+='<div class="sess-cards">';
+    for(const s of sessList){
+      const startD=s.start?new Date(s.start):null;
+      const endD=s.end?new Date(s.end):null;
+      const dur=startD&&endD?fmtDur(endD-startD):'In progress';
+      const dateStr=startD?startD.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})+' '+startD.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'Unknown';
+      const barW=Math.round(((s.record||0)/globalMax)*100);
+      const spikesHtml=(s.spikes||[]).map(sp=>`
+        <div class="sess-spike-row">
+          <span class="sess-spike-vod">${esc(sp.vod||'')}</span>
+          <span class="sess-spike-cnt">${sp.count||0}</span>
+          <span class="sess-spike-v">${(sp.viewers||0).toLocaleString()}</span>
+          <span class="sess-spike-w">${esc(sp.wall||'')}</span>
+          ${sp.isRecord?'<span class="sess-spike-rec">★ ATH</span>':''}
+        </div>`).join('');
+      html+=`
+        <div class="sess-card" onclick="toggleSessCard(this)">
+          <div class="sess-card-top">
+            <span class="sess-card-slug">${esc(s.slug||'?')}</span>
+            <div style="text-align:right">
+            <div class="sess-card-date">${dateStr}</div>
+            ${s.disconnectWall?`<div style="font-size:0.5rem;color:#f87171">Disconnected: ${esc(s.disconnectWall)}</div>`:''}
+          </div>
+          </div>
+          ${s.streamTitle?`<div style="font-size:0.65rem;color:var(--dim);margin:3px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(s.streamTitle||'')}">${esc(s.streamTitle||'')}</div>`:''}
+          ${s.category?`<div style="font-size:0.58rem;color:var(--gold);margin-bottom:3px">${esc(s.category||'')}</div>`:''}
+          <div class="sess-card-stats">
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--purple)">${s.record||0}</div><div class="sess-stat-l">ATH Spike</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--green)">${s.kekwTotal||0}</div><div class="sess-stat-l">Total KEKWs</div></div>
+            <div class="sess-stat"><div class="sess-stat-v">${(s.spikes||[]).length}</div><div class="sess-stat-l">Spikes</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--dim);font-size:.75rem">${dur}</div><div class="sess-stat-l">Duration</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--green);font-size:.75rem">${(s.peakViewers||0).toLocaleString()}</div><div class="sess-stat-l">Peak Viewers</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--gold);font-size:.75rem">$${(s.totalTips||0).toFixed(2)}</div><div class="sess-stat-l">Tips USD</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--gold);font-size:.75rem">${s.totalGifts||0}</div><div class="sess-stat-l">Gifted Subs</div></div>
+            <div class="sess-stat"><div class="sess-stat-v" style="color:var(--gold);font-size:.75rem">$${(s.kppEst||0).toFixed(2)}/hr</div><div class="sess-stat-l">KPP Est.</div></div>
+          </div>
+          <div class="sess-compare-bar"><div class="sess-compare-fill" style="width:${barW}%"></div></div>
+          <div class="sess-spikes-list">
+            <div style="font-size:0.58rem;color:var(--muted);padding:4px 0;text-transform:uppercase;letter-spacing:2px">Spike Log</div>
+            ${spikesHtml||'<div style="font-size:0.6rem;color:var(--muted)">No spikes recorded</div>'}
+          </div>
+        </div>`;
+    }
+    html+='</div>';
+  }
+  body.innerHTML=html;
+}
+function toggleSessCard(el){el.classList.toggle('expanded')}
+
+// Init
+renderFavs();drawChart();document.getElementById('hdr-clock').textContent=fmtClock();
+// Sound on by default — sync button
+(function(){const b=document.getElementById('sound-btn');if(b){b.textContent='🔔';b.classList.add('on')}})();
+</script>
+</body>
+</html>
