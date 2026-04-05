@@ -245,3 +245,39 @@ index.html   — main app (single file, no dependencies)
 404.html     — custom 404 page
 README.md    — this file
 ```
+
+### v0.28
+- **Favicon** — KEKW icon set as browser tab favicon
+- **Hot words** — now show count inline: `blind ×8`
+- **Dono bubble** — moved to KEKWs column (below count), click to show/hide tooltip with tipper details
+- **Pocket Watcher** — tip names are click-tooltips showing each tip's time and amount; multi-word donor names now matched correctly
+- **Tooltip system** — hover for `data-tip` elements, click-toggle for `data-click-tip` elements (dono, pw-names)
+- **Clip counter** — fixed `4/3` display bug (was incrementing before display)
+- **F Detector badge** — blue (#60a5fa); **Muted Detector badge** — red (#f87171)
+- **Toast notifications** — F=blue, Muted=red, CX=purple, each with matching background
+- **Wall time** — smaller font, `white-space:nowrap` prevents AM/PM wrapping
+- **Right column** — now scrollable independently
+- **Spam tags** — stack vertically for readability
+- **Clip thumbnail** — uses `/clips/{channelId}/{clipId}/thumbnail.webp` format (correct Kick CDN path)
+- **Word cloud export** — renders actual visual cloud matching live panel appearance
+- **Screenshot bar graph** — reverted to 60s live chart with count labels and KEKW icon row at bottom
+- **OAuth placeholder** — sanitized (no longer shows real token pattern)
+
+### v0.27
+- **gridTop TDZ crash** fixed — screenshot export now works
+- Panel export doubled to 840×560, color-aware DOM renderer
+- `tipsLog` per-tip event log (timestamp, amount, one-spike assignment)
+- Dono bubble: one tip → one spike, 120s before-spike window
+- Clip search debug logging to console
+- Clip filter: doesn't hide rows with active countdown
+- Screenshot fonts enlarged
+- Chart 📷 export button (900×200 PNG)
+
+### v0.26
+- Word cloud: live status `Gathering chat words… / N messages processed`
+- Word cloud: 30s refresh countdown in panel header `☁️ Word Cloud (↻ 28s)`
+- Clip searches: T+10s/25s/45s; accept window −45s to +120s
+
+### v0.25
+- **Critical fix:** Screenshot crashed with `Cannot access 'gridTop' before initialization`
+- Panel export doubled to 840×560, color-aware DOM renderer
