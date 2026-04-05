@@ -1,283 +1,207 @@
-# KEKWClips
+# KEKWClips v0.32
 
-A single-file browser tool for monitoring Kick.com live streams in real time. Detects KEKW emote spikes in chat, logs highlights with clip thumbnails and links, and tracks detailed session statistics across multiple monitoring sessions.
+A single-file browser tool for monitoring Kick.com live streams in real time. Detects KEKW emote spikes, logs highlights with clips and thumbnails, and tracks session statistics. No install, no server, no dependencies.
 
-**No install. No server. No dependencies.** Open `index.html` in Chrome or Edge and go.
+🔗 **[itsavibecode.github.io/kekw](https://itsavibecode.github.io/kekw)**  
+📁 **[github.com/itsavibecode/kekw](https://github.com/itsavibecode/kekw)**
 
-🔗 **Live:** [itsavibecode.github.io/kewkchat](https://itsavibecode.github.io/kewkchat)  
-📁 **Repo:** [github.com/itsavibecode/kewkchat](https://github.com/itsavibecode/kewkchat)
+---
+
+## Files
+```
+index.html   — main app (single file, ~216KB, fully self-contained)
+404.html     — custom 404 page with animated KEKW
+README.md    — this file
+```
 
 ---
 
 ## Quick Start
-
 1. Download `index.html`
 2. Open in Chrome or Edge
-3. Type a Kick streamer's username → **CONNECT**
+3. Type a streamer's username → **CONNECT**
 
 ---
 
 ## Features
 
 ### Spike Detection
-- Configurable **Min KEKWs**, **Window (sec)**, and **Cooldown (sec)**
-- Click **✓ APPLY SETTINGS** to apply without reconnecting
-- Live KEKW rate bar graph (last 60 seconds, 1 count per message)
-- Window counter shows real-time accumulation: `window: 4/10`
-- `🧪 TEST SPIKE` button to verify the highlight log is working
+- Configurable Min KEKWs / Window (sec) / Cooldown (sec) in ⚙️ Settings & Controls
+- Live KEKW rate bar graph (last 60 seconds)
+- `🧪 TEST SPIKE` button to verify the log is working
+- ✓ APPLY SPIKE SETTINGS without reconnecting
 
-### Highlight Log
-| Column | Description |
+### Highlight Log Columns
+| Column | Notes |
 |---|---|
-| VOD TIME | Timestamp relative to stream start |
-| KEKWs | Exact count, purple scaled light→dark by intensity |
-| VIEWERS | Viewer count at spike |
-| ΔVIEW | Viewer change since previous spike (dark red bubble ≥15k) |
-| UNIQ | Unique chatters in the rolling 60s window |
-| WALL TIME | Real clock time |
-| TOP SPAMMERS | Purple tag bubbles, darker = more KEKWs |
-| HOT WORDS | Top 5 chat words at spike moment |
-| FRAME / CLIP | Thumbnail + clip title, clipper username, link |
+| VOD TIME | **Clickable** → opens kick.com/{slug}/videos?t=N at that exact timestamp |
+| KEKWs | Purple scaled by intensity. 💰 dono bubble below count if tip was near spike |
+| VIEWERS | Count at spike |
+| ΔVIEW | Delta since previous spike. Dark red bubble if ≥15k gain |
+| UNIQ | Unique chatters in rolling 60s window |
+| WALL TIME | Real clock |
+| TOP SPAMMERS | Flex-wrap purple tag bubbles |
+| HOT WORDS | Top 5 words from **chat during the spike window** (not cumulative word cloud). Compact tags with ×count |
+| FRAME / CLIP | Thumbnail + clip title (linked) + clipper username |
 
-- **💰 dono bubble** — appears under HOT WORDS if a tip was recorded around the spike. Hover for tipper name, amount, and time.
-- **📎 Clip filter** — toggle to show only spikes that have clips attached
-- **All-time record rows** highlighted with purple left border
+- **📎 Clip filter** — show only spikes with confirmed clips
+- **💰 dono bubble** — click to show/hide tooltip (tipper, amount, time)
+- Record spikes have a purple left border
 
 ### Clip Finding
-Kicks's clip creation API is blocked by CORS from local files. Instead, KEKWClips searches for clips **already created by viewers** near each spike:
+Viewer clips are searched at T+10s, T+25s, T+45s after spike. Accepts clips −45s to +120s from spike. Each clip used at most twice. Hard 90s fallback prevents stuck "searching" state.
 
-1. Spike fires at T+0
-2. Countdown shows `🔍 10s`, `🔍 9s`… in the clip cell
-3. **First search at T+10s** — checks Kick's clips API for clips within ±30s of spike
-4. If not found → countdown resets, **second search at T+30s**
-5. If not found → **third search at T+60s**
-6. After all attempts → shows `No clip found`
-7. Each clip can be used by at most **2 spikes** (deduplication)
-8. Clip thumbnail shown in the frame column; falls back to stream thumbnail
+### Right Column Panels (each has 📷 export)
+| Panel | Theme | What it tracks |
+|---|---|---|
+| 🔴 KickSupport Watch | Dark red | Messages from KickSupport account with VOD+wall+viewers |
+| ⚡ Verified Watchers | Green | Verified Kick partners in chat with last message + timestamp |
+| CX Detector | Purple | CX waves from 10+ distinct users |
+| 💰 Pocket Watcher | Gold | Tips + gifted subs from KickBot. KPP estimate. |
+| 🅵 F Detector | Red | F-spam event groups |
+| 🔇 Muted Detector | Blue | Muted-spam event groups |
+| 🚨 Spammer Detector | Orange | Repeat message spammers |
 
-### Header Bar
-Stream Duration · Viewers · Unique Chatters/min · Date/Time · Total KEKWs · Spikes · All Time High · Stream Title · Category
+### Panel PNG Exports (📷 button, uniform badge|cam|▼ alignment)
+- **Verified Watchers** — 840×Npx, 2-column layout with KV badge, name, msg count, last message + timestamp
+- **KickSupport Watch** — 840×Npx, meme-style large message per entry, VOD time, wall time, monitored duration
+- **Muted Detector** — 840×Npx, ranked by count descending, start/end VOD + wall timestamps per event
+- **Word Cloud** — 840×560px, visual cloud with word bubbles sized by frequency
+- All other panels — 840×560px color-accurate DOM renderer
 
-**Monitoring section** (upper right): monitoring duration above "MONITORING ●", streamer name
+### Sidebar
+- 📡 **Channel** — slug, favourites, Connect/Disconnect button
+- ⚙️ **Settings & Controls** — Spike detection, OAuth token, Custom alert sound (MP3/WAV/OGG stored in browser), Clear/History/Test
+- 🏆 **KEKW Leaderboard** — session leaderboard with 📷 export
+- ☁️ **Word Cloud** — top chat words with 30s refresh countdown
 
-**📷 Screenshot button** — exports a 5:7 PNG with:
-- Stream info, streamer name, category
+### Header Bar 📷 Screenshot (500×825px)
+- Streamer + **STAT OVERVIEW** subtitle
+- Stream title, category
 - "Stats based on monitored duration of: Xhr Ym Zs"
-- Full-session KEKW rate bar graph with spike markers
+- KEKW last-60s bar graph with count labels and KEKW icon strip
 - 6-stat grid (stream duration, viewers, KEKWs, spikes, ATH, unique chatters)
 - Top 3 KEKW leaderboard
 - Top 5 word cloud bubbles
-- Timestamped footer with monitoring start/end and timezone
-
-### Right-Side Panels
-Each panel has a **📷 camera icon** to export a 3:2 (840×560) color-accurate PNG.
-
-| Panel | Description |
-|---|---|
-| 🔴 KickSupport Watch | Logs KickSupport messages with VOD time, viewers, wall clock. Sound alert. |
-| ✅ Verified Watchers | Verified Kick partners in chat. Excludes bots. Auto-expanding. |
-| CX Detector | Fires when 10+ distinct users send CX in a rolling window. Shows `X/10` pending count. |
-| 💰 Pocket Watcher | Tips + gifted subs leaderboards from KickBot messages. KPP estimate. |
-| 🅵 F Detector | Groups F-spam into events (red theme) with start/end VOD + wall time. |
-| 🔇 Muted Detector | Same as F Detector for "muted" messages (blue theme). |
-| 🚨 Spammer Detector | Flags users repeating 5+ word messages 3+ times. Skips emote messages. |
-
-### Sidebar (Collapsible Panels)
-- **📡 Channel** — username input, OAuth token (masked), favourites as tag bubbles
-- **⚡ Spike Detection** — threshold, window, cooldown, Apply button
-- **🎮 Monitor Controls** — Connect, Clear Log, Session History, Test Spike
-- **🏆 KEKW Leaderboard** — overall session leaderboard
-- **☁️ Word Cloud** — top chat words, emotes/emoji filtered out
+- Timestamped footer (captured, start, end, timezone)
 
 ### Session History
-Click **📊 Session History** to open the overlay. Sessions are grouped by streamer. Each card shows:
-- Stream title + category
-- ATH spike, total KEKWs, spike count
-- Duration, peak viewers
-- Tips total (USD), gifted subs total, KPP estimate
-- Connect time + disconnect time
-- Comparison bar (this session vs all sessions)
-- Click to expand full spike log
-
-### Pocket Watcher — KPP
-**Kick Projected Payout** estimates hourly revenue using: `$10 per 100 average viewers per hour`.  
-Samples viewer count every 30 seconds. Shows avg viewers, KPP/hr, and running total.
+Cards grouped by streamer showing: stream title, category, ATH spike, total KEKWs, spike count, duration, peak viewers, tips (USD), gifted subs, KPP estimate, connect/disconnect wall times.
 
 ### Auto-Reconnect
-On disconnect: red centre-screen overlay with descending tone alert. Auto-retries at 10s → 15s → 20s → … → 60s. Overlay auto-dismisses on successful reconnect. Retry count shown.
+Red centre-screen overlay with descending tone. Retries 10s → 15s → … → 60s. Auto-dismisses on reconnect.
+
+### Mobile (≤ 900px)
+Tab-bar navigation: ⚙️ Settings | 📊 Log | 💬 Chat | 📋 Panels. Desktop layout completely unchanged above 900px.
 
 ---
 
-## Getting Your OAuth Token (Optional)
+## Data Storage
 
-The token is not required for monitoring or clip finding. It's kept for future use.
+| Key | Content | Typical size |
+|---|---|---|
+| `kekwclips_sessions` | All session history (up to 100 sessions) | ~50–200 KB |
+| `kekwclips_favs` | Favourite channel names | <1 KB |
+| `kekwclips_custom_sound` | Base64 audio file if uploaded | Up to ~3 MB |
 
-1. Open [kick.com](https://kick.com) and log in
-2. Press `F12` → Network tab
-3. Filter by `api/v2`
-4. Click any request → Headers → copy value after `Bearer `
-
-> **Note:** "Login with Kick" via OAuth requires a registered app with a server redirect URI — not possible from a local HTML file.
+Stored in **browser localStorage** (device-local, no server). Data persists until you clear browser data or use the Clear button. Future enhancement: optional cloud sync via a simple backend.
 
 ---
 
-## Limitations
+## Gifted Subs Detection
+Currently parsed from KickBot messages matching: `"X just gifted N subs"`. Alternative sources:
+- The Kick API `/v2/channels/{slug}/gifted-subscriptions` (requires OAuth, not yet implemented)
+- WebSocket subscription events (Pusher channel `channel.subscription_gifted`) — could be added as a future listener
 
-| Issue | Status |
-|---|---|
-| Clip creation | Blocked by CORS. Viewer clip search is used instead. |
-| Exact frame capture | Stream thumbnail has ~30s delay. Clip thumbnail used when found. |
-| Verified streamer detection | Best-effort — reads `identity.badges[].type` from WebSocket payload |
-| Captions/transcripts | No public Kick API. Future enhancement. |
-| Login with Kick | Requires server-side redirect URI. Not feasible from local HTML. |
+---
+
+## VOD Linking
+Each VOD timestamp in the highlight log is a clickable link to `kick.com/{slug}/videos?t=N` where `N` is the seconds elapsed since stream start. Kick's VOD player seeks to that position automatically.
 
 ---
 
 ## Changelog
 
-### v0.25
-- **Fixed:** Screenshot export crashed with `Cannot access 'gridTop' before initialization` (TDZ bug from v0.23 bar graph insertion)
-- Panel export (📷) doubled to 840×560px
-- Panel export now reads computed CSS colors from DOM — usernames, counts, labels match their live colors
-- Updated README
+### v0.32
+- **Pocket Watcher:** Full username now captured (e.g. "Tazo is gay" from "Tazo is gay just tipped $5.00!") using greedy regex matching everything before "just tipped"
+- **Hot words:** Now captures words from rolling 60s chat window at spike time — not the cumulative word cloud. Tags are compact flex-wrap with bold ×N count
+- **Verified Watchers:** Stores last message + timestamp per watcher; shows them in panel and PNG export
+- **Verified Watchers panel icon:** Uses KV badge image instead of ✅
+- **Panel headers:** Uniform badge | 📷 | ▼ alignment across all panels
+- **KickSupport Watch export:** Meme-style large message with VOD timestamp, wall time, monitored duration
+- **Muted Detector export:** Ranked by count descending, start/end timestamps per event
+- **Verified Watchers export:** 2-column layout with KV badge, last message, timestamp
+- **VOD timestamps:** Clickable — opens Kick VOD at exact spike position
+- **Stats PNG:** Resized to 500×825, "STAT OVERVIEW" subtitle added
+- **Clip search:** 90s hard timeout prevents stuck "searching (3/3)" state
+- **v0.31:** Mobile responsive layout with @media (max-width:900px) tab navigation
 
-### v0.24
-- `index.html` — renamed from `kekw-detector.html` for GitHub Pages compatibility
-- `404.html` — custom 404 page with animated KEKW, links back to index
-- **Clip thumbnail** — tries multiple proxy strategies + falls back to direct `img.src` + derives thumbnail from clip ID pattern
-- **Countdown fix** — shows `🔍 Ns` ticking down, then `🔍 searching… (N/3)`, then `No clip found` on exhaustion
-- **Reconnect fix** — disconnect overlay auto-dismisses when WebSocket reconnects
-- **HOT WORDS column** — top 5 chat words at each spike captured and shown as purple tags
-- **💰 dono bubble** — gold bubble in HOT WORDS if tips were recorded around the spike; hover tooltip shows tipper details
-- **📎 Clip filter** — toggle in log bar to show only entries with clips
-- **Panel 📷 export** — all 9 panels (Verified Watchers, KickSupport, CX, Pocket Watcher, F, Muted, Spammer, Leaderboard, Word Cloud)
-- `hasClip` flag set on spike objects when clip is found, used by filter
+### v0.31
+- Mobile responsive: @media (max-width:900px) tab-based layout (Settings/Log/Chat/Panels)
+- Fixed layout collapse bug from v0.29 sidebar restructure (stray </div> breaking 4-column grid)
+- kickverified.png embedded as base64 for Verified Watchers badge
 
-### v0.23
-- Multi-attempt clip search: T+10s, T+30s, T+60s
-- Clip accept window expanded: 30s before spike to 90s after spike
-- Live countdown in clip cell while searching
-- KEKW rate bar graph added to screenshot export (full session, with spike markers)
-- Canvas height expanded to 980px for bar graph
+### v0.30
+- kickverified.png badge embedded in Verified Watchers panel
+- Fixed 4-column desktop layout (was collapsed to single column due to misplaced </div>)
 
-### v0.22
-- Clip deduplication — `clipUsageCount` Map ensures same clip used at most twice
-- Top 5 word cloud bubbles added to screenshot export (purple pills with frequency)
-- Canvas expanded to 860px
-
-### v0.21
-- Proxy list expanded to 5 options, shuffled randomly to prevent rate limiting when multiple tabs open
-- Screenshot version number corrected
-- Screenshot footer condensed: one-line start→end format with timezone
-
-### v0.20
-- Panel renames: "Pocket Watcher", "Verified Watchers"
-- Sound ON by default at load
-- F Detector = red theme, Muted Detector = blue theme (CSS ID overrides for badge specificity)
-- Frame + Clip merged into single column with thumbnail, title, clipper name
-- Screenshot: "Stats based on monitored duration of:" label above stats grid
-- Screenshot: detailed timestamp footer (captured, start, end, timezone)
-
-### v0.19
-- OAuth modal `display:none` by default (was rendering inline, breaking layout)
-- Close button + backdrop click work correctly
-- Tooltips render at `<body>` level — no longer clipped by `overflow:hidden` containers
-- Session history records connect/disconnect wall times
-- Screenshot: monitoring duration + top 3 KEKW leaderboard
-
-### v0.18
-- KPP (Kick Projected Payout) section in Pocket Watcher
-- Session history: stream title, category, tips, gifted subs, KPP
-- OAuth ? HELP modal with DevTools guide
-- Disconnect alert: red overlay, sound, auto-retry with backoff
-- Tooltips on panels and spike detection inputs
-- 📷 Screenshot button (5:7 PNG)
-
-### v0.17
-- Clip thumbnail fetched from clips API response and shown in frame column
-- `fetchProxyImage` helper shared across thumbnail fetching
-
-### v0.16
-- Clip URL: `kick.com/{slug}/clips/{id}` format (was returning raw .m3u8)
-- Stream Title + Category chips in header
-- Unique Chatters/min in header next to Viewers
-- Monitoring header: duration above label, streamer name inline
-
-### v0.15
-- Clip button re-enabled on clip found (was staying disabled)
-- Monitoring section: 3 items horizontal left-to-right
-
-### v0.14
-- Panel order standardised
-- Verified Watchers panel max-height increased
-
-### v0.13
-- **Critical fix:** `recordSpike` crashed due to removed DOM elements (`s-record`, `s-spikes`, `s-total`) — null reference
-- `setEl()` null-safe DOM helper added
-
-### v0.12
-- **Critical fix:** Spike detection rewritten with console logging
-- TEST SPIKE button added
-- Chat promoted to own full column (4-column layout)
-- CX Detector: 10+ distinct users required; pending count shown
-
-### v0.11
-- **Critical fix:** KEKW regex used ES2018 lookbehind — threw `SyntaxError` in older Chrome/Edge, silently swallowing all chat messages. Replaced with `\bKEKW\b`
-- `ws.onmessage` errors now logged to console
-- CX Detector: purple theme + CX icon
-
-### v0.10
-- CX Detector panel (standalone CX from 10+ users)
-- Apply Settings button in Spike Detection panel
-- Spammer detector skips emote-leading messages
-- KickBot, BotRix and other bots excluded from Verified Watchers
-- Pocket Watcher totals displayed
-
-### v0.09 and earlier
-- Session history, leaderboard panels, clip finder, chart, word cloud, all core panels established
-
----
-
-## File Structure
-
-```
-index.html   — main app (single file, no dependencies)
-404.html     — custom 404 page
-README.md    — this file
-```
+### v0.29
+- Spam tags: flex-wrap responsive cloud style
+- Clip filter rewritten: only shows confirmed hasClip=true rows
+- Sidebar: ⚙️ Settings & Controls panel (merged spike + OAuth + monitor)
+- Connect button moved into Channel panel
+- Custom alert sound: upload MP3/WAV/OGG, stored in localStorage as base64
+- Word cloud PNG: fixed number overlap
+- Chart PNG: KEKW icons below bars
 
 ### v0.28
-- **Favicon** — KEKW icon set as browser tab favicon
-- **Hot words** — now show count inline: `blind ×8`
-- **Dono bubble** — moved to KEKWs column (below count), click to show/hide tooltip with tipper details
-- **Pocket Watcher** — tip names are click-tooltips showing each tip's time and amount; multi-word donor names now matched correctly
-- **Tooltip system** — hover for `data-tip` elements, click-toggle for `data-click-tip` elements (dono, pw-names)
-- **Clip counter** — fixed `4/3` display bug (was incrementing before display)
-- **F Detector badge** — blue (#60a5fa); **Muted Detector badge** — red (#f87171)
-- **Toast notifications** — F=blue, Muted=red, CX=purple, each with matching background
-- **Wall time** — smaller font, `white-space:nowrap` prevents AM/PM wrapping
-- **Right column** — now scrollable independently
-- **Spam tags** — stack vertically for readability
-- **Clip thumbnail** — uses `/clips/{channelId}/{clipId}/thumbnail.webp` format (correct Kick CDN path)
-- **Word cloud export** — renders actual visual cloud matching live panel appearance
-- **Screenshot bar graph** — reverted to 60s live chart with count labels and KEKW icon row at bottom
-- **OAuth placeholder** — sanitized (no longer shows real token pattern)
+- Favicon set to KEKW icon
+- Hot words show count (word ×N)
+- Dono bubble moved to KEKWs column with click-tooltip
+- Tooltip system: hover (data-tip) + click-toggle (data-click-tip)
+- Clip counter 4/3 bug fixed
+- F badge=blue, Muted badge=red (corrected)
+- Toast colors: F=blue, Muted=red, CX=purple
+- Right column scrollable independently
+- Clip thumbnail: /clips/{channelId}/{clipId}/thumbnail.webp format
+- Screenshot bar graph: 60s live chart with KEKW icon row
 
 ### v0.27
-- **gridTop TDZ crash** fixed — screenshot export now works
-- Panel export doubled to 840×560, color-aware DOM renderer
-- `tipsLog` per-tip event log (timestamp, amount, one-spike assignment)
-- Dono bubble: one tip → one spike, 120s before-spike window
-- Clip search debug logging to console
-- Clip filter: doesn't hide rows with active countdown
-- Screenshot fonts enlarged
+- tipsLog per-tip event log with timestamps
+- Dono bubble: one tip → one spike (120s window)
 - Chart 📷 export button (900×200 PNG)
+- Screenshot fonts enlarged
 
 ### v0.26
-- Word cloud: live status `Gathering chat words… / N messages processed`
-- Word cloud: 30s refresh countdown in panel header `☁️ Word Cloud (↻ 28s)`
-- Clip searches: T+10s/25s/45s; accept window −45s to +120s
+- Word cloud: live status + 30s refresh countdown
+- Clip searches: T+10s/25s/45s, accept window −45s to +120s
 
 ### v0.25
-- **Critical fix:** Screenshot crashed with `Cannot access 'gridTop' before initialization`
+- Fixed screenshot crash (gridTop TDZ bug)
 - Panel export doubled to 840×560, color-aware DOM renderer
+
+### v0.24
+- index.html renamed for GitHub Pages
+- 404.html custom page
+- Clip thumbnail multi-proxy with webp CDN format
+- Countdown: 🔍 Ns → 🔍 searching (N/3) → No clip found
+- Reconnect overlay auto-dismisses
+- HOT WORDS column + dono bubble
+- Clip filter toggle
+- All panel 📷 exports
+
+### v0.23
+- Multi-attempt clip search (T+10s/30s/60s)
+- Clip accept window: 30s before → 90s after spike
+- KEKW bar graph in screenshot
+
+### v0.22
+- Clip deduplication (max 2 uses per clip)
+- Top 5 word cloud bubbles in screenshot
+
+### v0.21
+- Proxy list: 5 options, shuffled per connect to prevent rate-limiting
+- F/Muted badge color fix
+
+### v0.20 and earlier
+- Panel renames, sound defaults, F/Muted themes, merged Frame+Clip column, screenshot improvements
