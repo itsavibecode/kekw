@@ -810,7 +810,7 @@ const KEKW_IMG='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST
 let ws=null,connected=false,pingTimer=null,keyIdx=0;
 let autoRetryTimer=null,retryCount=0,retryEnabled=false;
 let streamStartEpoch=null,connectEpoch=null,sessionStartEpoch=null;
-let viewerCount=0,prevViewerCount=0,viewerPollTimer=null;
+let viewerCount=0,prevViewerCount=0,viewerPollTimer=null,streamInfoTimer=null;
 let totalKekws=0,spikes=0,lastSpike=0,allTimeRecord=0;
 let kekwMsgTs=[];
 let highlights=[],chatCount=0,totalMsgCount=0;
@@ -1493,7 +1493,7 @@ async function connect(){
   document.getElementById('hdr-viewers').textContent=viewers.toLocaleString();
   document.getElementById('hdr-streamer').textContent=slug;
   clearInterval(viewerPollTimer);viewerPollTimer=setInterval(()=>pollViewers(slug),60000);
-  clearInterval(streamInfoTimer);streamInfoTimer=setInterval(()=>refreshStreamInfo(slug),900000); // refresh title/cat/dur every 15min
+  clearInterval(streamInfoTimer);streamInfoTimer=setInterval(()=>refreshStreamInfo(slug),900000);
   setStatus('connecting','CONNECTING...');btn.textContent='CONNECTING...';
   keyIdx=0;tryWS(chatroomId,btn);
 }
@@ -1960,11 +1960,28 @@ function playCustomSound(vol){
     return true;
   }catch{return false}
 }
-// Load saved custom sound on startup
-(function(){
-  const saved=localStorage.getItem(CUSTOM_SOUND_KEY);
-  if(saved){customSoundB64=saved;document.getElementById('custom-sound-name').textContent='Custom (saved)';setTimeout(preloadCustomSound,500);}
-})();
+// Load saved sounds once DOM is ready (avoids null errors on startup)
+window.addEventListener('load',function(){
+  try{
+    // New per-type sounds (v2 format)
+    const saved2=JSON.parse(localStorage.getItem(CUSTOM_SOUND_KEY2)||'{}');
+    for(const t of ['spike','record']){
+      if(saved2[t]){
+        customSounds[t].b64=saved2[t];
+        const el=document.getElementById('custom-sound-name-'+t);
+        if(el)el.textContent='Custom (saved)';
+        setTimeout(()=>preloadCustomSound(t),500);
+      }
+    }
+    // Legacy single-sound migration → becomes spike sound
+    const legacy=localStorage.getItem(CUSTOM_SOUND_KEY);
+    if(legacy&&!saved2.spike){
+      customSounds.spike.b64=legacy;
+      customSoundB64=legacy; // keep legacy compat
+      setTimeout(()=>preloadCustomSound('spike'),600);
+    }
+  }catch(e){console.warn('Sound load error:',e)}
+});
 
 function applySpike(){
   const thr=nv('threshold'),win=nv('window'),cool=nv('cooldown');
