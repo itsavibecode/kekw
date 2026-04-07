@@ -196,3 +196,28 @@ Technically yes — Kick streams are HLS (`.m3u8`). You'd need an HLS player lib
 
 **Can screenshots be tweeted?**  
 Yes — the Web Share API (`navigator.share({files:[...]})`) can share canvas-exported PNGs on mobile. For desktop Twitter/X posting you'd need the Twitter/X API v2 with OAuth2 and a backend to handle the token exchange. A simpler approach: add a "Copy image" button that puts the PNG on the clipboard, then the user pastes into a tweet manually. The Twitter API route is doable but requires registering a developer app.
+
+### v0.41
+- **Session filter**: Rebuilds from localStorage on every open — all monitored streamers now appear
+- **Peak Viewers**: New header chip tracks session-high viewer count with VOD timestamp; included in stats PNG export
+- **KEKW/min chip**: Live rolling rate in header bar; included in stats PNG
+- **Stats PNG**: Now 8 stat boxes (added Peak Viewers, KEKW/min, Avg KEKW/Spike)
+- **Panel reorganisation**: Session History → Channel panel; Clear Log + Test Spike → Spike Detection section
+- **CX + PB events**: Usernames who triggered the wave are stored and displayed (up to 8 shown, truncated)
+- **CX Alert sound** (`alert-cx.mp3`): Bundled and pre-loaded; separate volume slider in Alert Sounds
+- **PatrickBoo Alert sound** (`alert-boo.mp3`): Bundled and pre-loaded; separate volume slider
+- **RSS feed export**: 📡 button in Session History exports all spikes, CX events, and PatrickBoo events as XML
+- RSS includes: spike count, viewers, record flag, top spammers, CX/PB user lists, timestamps
+
+### v0.40
+- Favourites act as channel switch when connected to a different streamer
+- Disconnect button freeze fixed: `switchChannel` uses `try/finally` to always re-enable button
+- `checkSlugChanged` guards against button being disabled mid-switch
+- Spike detection buttons: equal `flex:1`, RESET button red with label
+
+### v0.39
+- **Save Spike Settings as Default**: 💾 DEFAULT button saves threshold/window/cooldown to localStorage; loaded automatically on next open
+- **↺ RESET**: Resets to factory defaults (10/10/30)
+- **Channel Switching**: Typing a different channel name while connected changes DISCONNECT → SWITCH TO {name}
+- Clicking SWITCH saves current session, resets all state, connects to new channel
+- Favourites trigger switch if a different channel is connected
