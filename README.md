@@ -221,3 +221,22 @@ Yes — the Web Share API (`navigator.share({files:[...]})`) can share canvas-ex
 - **Channel Switching**: Typing a different channel name while connected changes DISCONNECT → SWITCH TO {name}
 - Clicking SWITCH saves current session, resets all state, connects to new channel
 - Favourites trigger switch if a different channel is connected
+
+### v0.42
+- **Alert Sounds panel**: all 4 sound slots (Spike, Record Spike, CX Wave, PatrickBoo Wave) consolidated into one section — no sounds scattered elsewhere
+- **ice_heehaw.mp3**: Embedded as base64, pre-decoded at startup. Available as "🐴 Ice Heehaw" option in the Record Spike dropdown
+- **Spike row 📷 export**: When a clip is confirmed for a spike, a 📷 button appears on that row. Exports a 4:3 (800×600) PNG containing: spike count headline, stat boxes (KEKW/s, viewers, Δ viewers, uniq chatters), 60s bar chart snapshot, hot word tags, clip thumbnail if available, top chatters
+- **RSS feed**: Confirmed uses live in-memory session data (`highlights[]`, `cxEvents[]`, `pbEvents[]`) — exports all events from the current active monitoring session on demand
+- **Toast notifications**: All toasts now use solid opaque backgrounds (cx-wave `#3b1f6b`, pb-wave `#7a3020`) — no more transparency
+- **Stream title chip**: `white-space:normal`, `overflow-wrap:break-word` — title wraps instead of being clipped
+
+### v0.41
+- Session filter dropdown rebuilt from localStorage on every open — all monitored streamers now appear
+- Peak Viewers header chip with VOD timestamp; included in stats PNG export
+- KEKW/min live chip in header; included in stats PNG  
+- Stats PNG: 8 stat boxes (Peak Viewers, KEKW/min, Avg KEKW/Spike added)
+- Panel reorganisation: Session History under Channel panel; Clear Log + Test Spike under Spike Detection
+- CX + PatrickBoo events: usernames stored and shown (up to 8 per event)
+- CX alert sound (alert-cx.mp3): embedded, pre-loaded, separate vol slider
+- PatrickBoo alert sound (alert-boo.mp3): embedded, pre-loaded, separate vol slider
+- RSS feed export: 📡 button exports spikes + CX events + PB events as XML
