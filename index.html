@@ -1458,22 +1458,27 @@ async function findClipsAttempt(id,h,onFound,onMiss){
   // Don't overwrite the countdown timer display
   try{
     // Kick's public clip endpoint — fetch recent clips for the channel
-    const target=encodeURIComponent(`https://kick.com/api/v2/channels/${currentSlug}/clips?sort=date&time=day`);
-    const proxies=[
-      `https://api.allorigins.win/get?url=${target}`,
-      `https://corsproxy.io/?${target}`,
-    ];
+    // Try multiple time windows and proxies
     let clips=null;
-    for(const proxyUrl of proxies){
-      try{
-        const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(8000)});
-        if(!r.ok)continue;
-        const w=await r.json();
-        const raw=w.contents!==undefined?w.contents:JSON.stringify(w);
-        const data=typeof raw==='string'?JSON.parse(raw):raw;
-        clips=data?.clips?.data||data?.data||data?.clips||[];
-        if(clips.length)break;
-      }catch{continue}
+    for(const timeWindow of ['day','week']){
+      if(clips&&clips.length)break;
+      const target=encodeURIComponent(`https://kick.com/api/v2/channels/${currentSlug}/clips?sort=date&time=${timeWindow}`);
+      const proxies=[
+        `https://corsproxy.io/?${target}`,
+        `https://api.allorigins.win/get?url=${target}`,
+        `https://api.codetabs.com/v1/proxy?quest=${target}`,
+      ];
+      for(const proxyUrl of proxies){
+        try{
+          const r=await fetch(proxyUrl,{signal:AbortSignal.timeout(9000)});
+          if(!r.ok)continue;
+          const w=await r.json();
+          const raw=w.contents!==undefined?w.contents:(w.body!==undefined?w.body:JSON.stringify(w));
+          const data=typeof raw==='string'?JSON.parse(raw):raw;
+          const found=data?.clips?.data||data?.clips||data?.data||[];
+          if(found.length){clips=found;break;}
+        }catch(e){console.warn('clip proxy fail',proxyUrl,e.message);continue}
+      }
     }
     if(!clips||!clips.length){
       if(onMiss)onMiss();
@@ -1823,7 +1828,26 @@ function onMsg(content,sender){
   }
 
   // Pocket Watchin
-  if(user.toLowerCase()==='kickbot'||user.toLowerCase()==='kick'){parsePocketWatchin(content)}
+  if(user.toLowerCase()==='kickbot'||user.toLowerCase()==='kick'){
+    parsePocketWatchin(content);
+    // Also detect !clip URLs posted by KickBot
+    const clipMatch=content.match(/https?:\/\/(?:www\.)?kickbot\.com\/clip\/([a-zA-Z0-9]+)/);
+    if(clipMatch){
+      const kbClipUrl='https://kickbot.com/clip/'+clipMatch[1];
+      console.log('[KEKWClips] KickBot clip URL detected:',kbClipUrl);
+      // Assign to the most recent unclipped spike within 120s
+      const now=Date.now();
+      const recentSpike=highlights.find(sp=>!sp.hasClip&&now-sp.spikeEpoch<120000);
+      if(recentSpike){
+        const ci=document.getElementById('ci'+recentSpike.id);
+        if(ci){
+          ci.innerHTML=`<a class="clip-title-link" href="${kbClipUrl}" target="_blank" rel="noopener">KickBot Clip</a>`;
+          recentSpike.hasClip=true;applyClipFilter();
+          showToast('📎 KickBot clip detected!');
+        }
+      }
+    }
+  }
 
   // KEKW
   if(testKekw(content)){
@@ -2244,6 +2268,26 @@ function addSoundOption(type,filename){
   sel.value='custom';
   customSounds[type].active='custom';
 }
+function playCustomSound(type){
+  const s=customSounds[type];
+  if(!s||!soundEnabled)return false;
+  const active=s.active||'default';
+  if(active==='off')return true; // silenced intentionally
+  let buf=null;
+  if(active==='heehaw')      buf=customSounds.record?.heehaw||null;
+  else if(active==='cx_bundled') buf=customSounds.cx?.buf||null;
+  else if(active==='boo_bundled')buf=customSounds.boo?.buf||null;
+  else if(active==='custom') buf=s.buf||null;
+  if(!buf)return false; // nothing loaded yet → fall through to default tones
+  try{
+    const ac=getAC(),src=ac.createBufferSource(),g=ac.createGain();
+    src.buffer=buf;
+    g.gain.setValueAtTime(Math.max(0.001,s.vol??0.5),ac.currentTime);
+    src.connect(g);g.connect(ac.destination);src.start(0);
+    return true;
+  }catch(e){console.warn('playCustomSound',type,e);return false}
+}
+
 function selectSound(type,val){
   customSounds[type].active=val;
   saveSoundPrefs();
@@ -2251,6 +2295,97 @@ function selectSound(type,val){
   if(val==='default'){if(soundEnabled)spikeSound(type==='record',true);}
   else{if(soundEnabled)playCustomSound(type);}
 }
+function saveSoundPrefs(){
+  const prefs={};
+  for(const t of ['spike','record','cx','boo']){
+    if(customSounds[t].b64){
+      prefs[t]=customSounds[t].b64;
+      prefs[t+'_name']=customSounds[t].filename||'Custom';
+      prefs[t+'_active']=customSounds[t].active||'default';
+    }
+  }
+  try{localStorage.setItem(CUSTOM_SOUND_KEY2,JSON.stringify(prefs))}catch(e){}
+}
+
+async function preloadCustomSound(type){
+  type=type||'spike';
+  const s=customSounds[type];
+  if(!s?.b64)return;
+  try{
+    const ac=getAC();
+    const b64str=s.b64.includes(',')? s.b64.split(',')[1] : s.b64;
+    const bin=atob(b64str);
+    const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+    customSounds[type].buf=await ac.decodeAudioData(arr.buffer);
+    console.log('[KEKWClips] Sound preloaded:',type);
+  }catch(e){console.warn('preloadCustomSound('+type+') failed:',e)}
+}
+
+// Load saved sounds + preload bundled sounds once DOM is ready
+window.addEventListener('load',function(){
+  try{
+    // 1. Preload bundled cx/boo sounds from their embedded b64
+    for(const t of ['cx','boo']){
+      if(customSounds[t]?.b64&&!customSounds[t].buf){
+        setTimeout(()=>preloadCustomSound(t),400);
+      }
+    }
+    // 2. Decode heehaw into record.heehaw buffer
+    if(HEEHAW_B64){
+      (async()=>{
+        try{
+          const ac=getAC();
+          const b=atob(HEEHAW_B64.split(',')[1]);
+          const ar=new Uint8Array(b.length);
+          for(let i=0;i<b.length;i++)ar[i]=b.charCodeAt(i);
+          customSounds.record.heehaw=await ac.decodeAudioData(ar.buffer);
+          console.log('[KEKWClips] heehaw preloaded');
+        }catch(e){console.warn('heehaw preload:',e)}
+      })();
+    }
+    // 3. Load user-saved custom sounds from localStorage
+    const saved2=JSON.parse(localStorage.getItem(CUSTOM_SOUND_KEY2)||'{}');
+    for(const t of ['spike','record','cx','boo']){
+      if(saved2[t]){
+        customSounds[t].b64=saved2[t];
+        customSounds[t].filename=saved2[t+'_name']||'Custom';
+        customSounds[t].active=saved2[t+'_active']||'custom';
+        // Update dropdown to reflect saved selection
+        setTimeout(()=>{
+          const sel=document.getElementById('sound-sel-'+t);
+          if(sel){
+            // Add custom option if not present
+            if(![...sel.options].some(o=>o.value==='custom')){
+              const opt=document.createElement('option');
+              opt.value='custom';opt.textContent='🎧 Custom: '+(customSounds[t].filename||'').slice(0,22);
+              sel.appendChild(opt);
+            }
+            sel.value=customSounds[t].active;
+          }
+          // Update vol slider
+          const slider=document.getElementById('vol-'+t);
+          const lbl=document.getElementById('vol-'+t+'-lbl');
+          if(slider&&customSounds[t].vol){
+            const pct=Math.round(customSounds[t].vol*100);
+            slider.value=pct;
+            if(lbl)lbl.textContent=pct+'%';
+          }
+          setTimeout(()=>preloadCustomSound(t),600);
+        },500);
+      }
+    }
+    // 4. Legacy migration: single spike custom sound
+    const legacy=localStorage.getItem(CUSTOM_SOUND_KEY);
+    if(legacy&&!saved2.spike){
+      customSounds.spike.b64=legacy;
+      customSounds.spike.active='custom';
+      setTimeout(()=>preloadCustomSound('spike'),700);
+    }
+    // 5. Load spike defaults
+    loadSpikeDefaults();
+  }catch(e){console.warn('Sound load:',e)}
+});
 
 function loadSpikeDefaults(){
   try{
