@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KEKWClips v0.47</title>
+<meta name="description" content="Real-time KEKW emote spike detector for Kick.com streams. Logs highlights with clips, thumbnails, and session stats. No install, no server.">
+<meta name="theme-color" content="#53fc18">
+<link rel="canonical" href="https://itsavibecode.github.io/kekw/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KEKWClips">
+<meta property="og:title" content="KEKWClips — Kick.com Highlight Monitor">
+<meta property="og:description" content="Real-time KEKW emote spike detector for Kick streams. Logs highlights with clips, thumbnails, and session stats.">
+<meta property="og:url" content="https://itsavibecode.github.io/kekw/">
+<meta property="og:image" content="https://itsavibecode.github.io/kekw/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="KEKWClips — Kick.com Highlight Monitor">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KEKWClips — Kick.com Highlight Monitor">
+<meta name="twitter:description" content="Real-time KEKW emote spike detector for Kick streams.">
+<meta name="twitter:image" content="https://itsavibecode.github.io/kekw/og.png">
+<meta name="twitter:image:alt" content="KEKWClips — Kick.com Highlight Monitor">
 <link rel="icon" type="image/jpeg" href="data:image/jpeg;base64,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">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
